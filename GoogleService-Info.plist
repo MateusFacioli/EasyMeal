@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAHAVfjYjwgxIkZRM2965zoOSWoxRsAqNI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>109049869591</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.EM.EasyMeal</string>
+	<key>PROJECT_ID</key>
+	<string>easymeal-9220e</string>
+	<key>STORAGE_BUCKET</key>
+	<string>easymeal-9220e.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:109049869591:ios:eb6a0650d3aef2bf033352</string>
+</dict>
+</plist>

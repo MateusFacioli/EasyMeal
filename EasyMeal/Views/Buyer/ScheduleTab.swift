@@ -1,0 +1,304 @@
+//
+//  ScheduleTab.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+
+import SwiftUI
+
+struct ScheduleTab: View {
+    let seller: Seller
+    @State private var selectedDate = Date()
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            if seller.schedules.isEmpty {
+                VStack(spacing: 20) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.system(size: 50))
+                        .foregroundColor(.gray)
+                    
+                    Text("Horários não configurados")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                    
+                    Text("Este comerciante ainda não definiu seus horários de atendimento")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, minHeight: 300)
+                .padding()
+            } else {
+                // Status de funcionamento hoje
+                let today = Calendar.current.component(.weekday, from: Date())
+                let todaySchedule = seller.schedules.first { $0.dayOfWeek == today && $0.isActive }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Label {
+                        Text("Funcionamento Hoje")
+                            .font(.headline)
+                    } icon: {
+                        Image(systemName: "calendar")
+                            .foregroundColor(.blue)
+                    }
+                    
+                    if let schedule = todaySchedule {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 8, height: 8)
+                                    
+                                    Text("Aberto")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.green)
+                                }
+                                
+                                Text("\(schedule.startTime, style: .time) - \(schedule.endTime, style: .time)")
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                
+                                if let address = schedule.location.address {
+                                    Label(address, systemImage: "location.fill")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            if schedule.isActive {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.green.opacity(0.3))
+                            }
+                        }
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(15)
+                    } else {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 8, height: 8)
+                                    
+                                    Text("Fechado hoje")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.red)
+                                }
+                                
+                                Text("Não há atendimento hoje")
+                                    .font(.body)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "xmark.seal.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.red.opacity(0.3))
+                        }
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(15)
+                    }
+                }
+                .padding(.horizontal)
+                
+                // Horários da Semana
+                VStack(alignment: .leading, spacing: 12) {
+                    Label {
+                        Text("Horários da Semana")
+                            .font(.headline)
+                    } icon: {
+                        Image(systemName: "calendar.badge.clock")
+                            .foregroundColor(.blue)
+                    }
+                    
+                    VStack(spacing: 8) {
+                        ForEach(1...7, id: \.self) { day in
+                            if let schedule = seller.schedules.first(where: { $0.dayOfWeek == day }) {
+                                WeekDayRow(
+                                    dayName: schedule.dayName,
+                                    hours: "\(schedule.startTime, style: .time) - \(schedule.endTime, style: .time)",
+                                    location: schedule.location.address,
+                                    isActive: schedule.isActive,
+                                    isToday: day == today
+                                )
+                            } else {
+                                WeekDayRow(
+                                    dayName: getDayName(for: day),
+                                    hours: "Fechado",
+                                    location: nil,
+                                    isActive: false,
+                                    isToday: day == today
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                
+                // Ações
+                VStack(spacing: 12) {
+                    Button(action: {
+                        addToCalendar()
+                    }) {
+                        HStack {
+                            Image(systemName: "calendar.badge.plus")
+                            Text("Adicionar horários ao calendário")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    
+                    if let location = seller.currentLocation {
+                        Button(action: {
+                            openMaps(location: location)
+                        }) {
+                            HStack {
+                                Image(systemName: "map.fill")
+                                Text("Ver localização no mapa")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 20)
+            }
+        }
+        .padding(.vertical)
+    }
+    
+    private func getDayName(for day: Int) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "pt_BR")
+        return dateFormatter.weekdaySymbols[day - 1]
+    }
+    
+    private func addToCalendar() {
+        // TODO: Implementar adição ao calendário nativo
+        // Usar EventKit para adicionar eventos ao calendário
+        print("Adicionar horários ao calendário")
+    }
+    
+    private func openMaps(location: Location) {
+        let coordinate = location.coordinate
+        let url = URL(string: "maps://?saddr=&daddr=\(coordinate.latitude),\(coordinate.longitude)")
+        
+        if let url = url, UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            // Fallback para Apple Maps web
+            let webUrl = URL(string: "https://maps.apple.com/?daddr=\(coordinate.latitude),\(coordinate.longitude)")
+            if let webUrl = webUrl {
+                UIApplication.shared.open(webUrl)
+            }
+        }
+    }
+}
+
+// MARK: - Week Day Row
+struct WeekDayRow: View {
+    let dayName: String
+    let hours: String
+    let location: String?
+    let isActive: Bool
+    let isToday: Bool
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack {
+                HStack {
+                    if isToday {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 6, height: 6)
+                    }
+                    
+                    Text(dayName)
+                        .font(.subheadline)
+                        .fontWeight(isToday ? .bold : .regular)
+                }
+                .frame(width: 100, alignment: .leading)
+                
+                Text(hours)
+                    .font(.subheadline)
+                    .foregroundColor(isActive ? .primary : .gray)
+                
+                Spacer()
+                
+                if !isActive {
+                    Text("Fechado")
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(.gray)
+                        .cornerRadius(4)
+                }
+            }
+            
+            if let address = location, isActive {
+                HStack {
+                    Spacer()
+                    Text(address)
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                        .padding(.leading, 100)
+                }
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(isToday ? Color.blue.opacity(0.05) : Color.clear)
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Preview
+struct ScheduleTab_Previews: PreviewProvider {
+    static var previews: some View {
+        let mockSeller = Seller(
+            id: "1",
+            userId: "1",
+            userEmail: "lanches@ze.com",
+            userName: "Zé",
+            userPhone: "11999999999",
+            businessName: "Lanches do Zé",
+            description: "Lanches",
+            isOnline: true,
+            currentLocation: Location(latitude: -23.5505, longitude: -46.6333),
+            schedules: [
+                Schedule(id: "1", dayOfWeek: 2, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true),
+                Schedule(id: "2", dayOfWeek: 3, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true),
+                Schedule(id: "3", dayOfWeek: 4, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true)
+            ],
+            menuId: nil,
+            rating: 4.5,
+            totalReviews: 42,
+            isAvailableNow: true,
+            address: nil,
+            profileImageURL: nil,
+            createdAt: Date()
+        )
+        
+        ScheduleTab(seller: mockSeller)
+    }
+}
