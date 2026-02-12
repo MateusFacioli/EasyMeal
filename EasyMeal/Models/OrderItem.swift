@@ -1,3 +1,12 @@
+//
+//  OrderItem.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import Foundation
+
 struct OrderItem: Identifiable {
     let id = UUID().uuidString
     let menuItemId: String

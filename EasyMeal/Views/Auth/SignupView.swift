@@ -1,9 +1,17 @@
+//
+//  SignupView.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 10/02/26.
+//
+
+
 import SwiftUI
+import Combine
 
 struct SignupView: View {
     @EnvironmentObject var sellerAuthVM: SellerAuthViewModel
     @Environment(\.presentationMode) var presentationMode
-    @State private var showDocumentInfo = false
     
     var body: some View {
         ScrollView {
@@ -15,7 +23,7 @@ struct SignupView: View {
                             .font(.title2)
                     }
                     Spacer()
-                    Text(sellerAuthVM.documentType == .seller ? "Cadastro Comerciante" : "Cadastro Cliente")
+                    Text(sellerAuthVM.userType == .seller ? "Cadastro Comerciante" : "Cadastro Cliente")
                         .font(.headline)
                     Spacer()
                 }
@@ -25,7 +33,7 @@ struct SignupView: View {
                 VStack(spacing: 15) {
                     // Documento
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(sellerAuthVM.documentType == .seller ? "CNPJ" : "CPF")
+                        Text(sellerAuthVM.userType == .seller ? "CNPJ" : "CPF")
                             .font(.caption)
                             .foregroundColor(.gray)
                         
@@ -67,20 +75,20 @@ struct SignupView: View {
                     
                     // Nome/Razão Social
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(sellerAuthVM.documentType == .seller ? "Razão Social" : "Nome Completo")
+                        Text(sellerAuthVM.userType == .seller ? "Razão Social" : "Nome Completo")
                             .font(.caption)
                             .foregroundColor(.gray)
                         
-                        TextField(sellerAuthVM.documentType == .seller ? "Nome da Empresa" : "Seu nome", text: $sellerAuthVM.displayName)
+                        TextField(sellerAuthVM.userType == .seller ? "Nome da Empresa" : "Seu nome", text: $sellerAuthVM.name)
                             .padding()
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(8)
                     }
                     
                     // Nome do Negócio (apenas para comerciante)
-                    if sellerAuthVM.documentType == .seller {
+                    if sellerAuthVM.userType == .seller {
                         VStack(alignment: .leading, spacing: 5) {
-                            Text("Nome do Negócio")
+                            Text("Nome Fantasia")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             
@@ -108,6 +116,18 @@ struct SignupView: View {
                                 .font(.caption)
                                 .foregroundColor(.red)
                         }
+                    }
+                    
+                    // Endereço (opcional)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Endereço (opcional)")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        
+                        TextField("Rua, número, bairro", text: $sellerAuthVM.address)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
                     }
                     
                     // Senha
@@ -187,7 +207,9 @@ struct SignupView: View {
         .navigationBarHidden(true)
         .background(
             NavigationLink(
-                destination: SellerProfileSetupView(),
+                destination: sellerAuthVM.userType == .seller ?
+                    AnyView(SellerProfileSetupView()) :
+                    AnyView(BuyerHomeView()),
                 isActive: $sellerAuthVM.shouldNavigateToProfile
             ) { EmptyView() }
         )

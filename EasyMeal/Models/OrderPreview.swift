@@ -5,6 +5,7 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import Foundation
 
 struct OrderPreview: Identifiable {
     let id: String
@@ -19,13 +20,4 @@ struct OrderPreview: Identifiable {
         formatter.locale = Locale(identifier: "pt_BR")
         return formatter.string(from: NSNumber(value: total)) ?? "R$ \(total)"
     }
-}
-
-enum OrderStatus: String, Codable {
-    case pending = "Pendente"
-    case confirmed = "Confirmado"
-    case preparing = "Preparando"
-    case ready = "Pronto"
-    case delivered = "Entregue"
-    case cancelled = "Cancelado"
 }
