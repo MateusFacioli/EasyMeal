@@ -1,5 +1,5 @@
 //
-//  FirebaseAuth+Combine.swift
+//  FirebaseAuth.swift
 //  EasyMeal
 //
 //  Created by Mateus Rodrigues on 10/02/26.

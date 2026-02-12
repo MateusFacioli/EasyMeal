@@ -20,9 +20,12 @@ class LocationSetupViewModel: ObservableObject {
     @Published var showError = false
     @Published var errorMessage: String?
     
-    var annotations: [Location] {
-        guard let location = selectedLocation else { return [] }
-        return [location]
+    // Propriedade computada para o Map - converte Location para MapAnnotationItem
+    var mapAnnotations: [MapAnnotationItem] {
+        if let location = selectedLocation {
+            return [MapAnnotationItem(coordinate: location.coordinate)]
+        }
+        return []
     }
     
     private let locationService: LocationServiceProtocol
@@ -96,6 +99,12 @@ class LocationSetupViewModel: ObservableObject {
                 } else {
                     // Fechar a view
                     NotificationCenter.default.post(name: NSNotification.Name("LocationSaved"), object: nil)
+                    // Dismiss da view
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let window = windowScene.windows.first,
+                       let rootViewController = window.rootViewController {
+                        rootViewController.dismiss(animated: true)
+                    }
                 }
             } receiveValue: { _ in }
             .store(in: &cancellables)

@@ -1,5 +1,5 @@
 //
-//  DatabaseServiceProtocol.swift
+//  DatabaseService.swift
 //  EasyMeal
 //
 //  Created by Mateus Rodrigues on 10/02/26.
@@ -13,6 +13,7 @@ import Combine
 protocol DatabaseServiceProtocol {
     func save<T: Encodable>(_ object: T, path: String) -> AnyPublisher<Void, Error>
     func fetch<T: Decodable>(path: String) -> AnyPublisher<T, Error>
+    func fetchAll<T>(path: String) -> AnyPublisher<[T], Error> where T : Decodable
     func update(path: String, data: [String: Any]) -> AnyPublisher<Void, Error>
     func delete(path: String) -> AnyPublisher<Void, Error>
     func observe<T: Decodable>(path: String) -> AnyPublisher<T, Error>
@@ -28,7 +29,9 @@ class DatabaseService: DatabaseServiceProtocol {
     func save<T: Encodable>(_ object: T, path: String) -> AnyPublisher<Void, Error> {
         Future<Void, Error> { promise in
             do {
-                let json = try JSONEncoder().encode(object)
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .secondsSince1970
+                let json = try encoder.encode(object)
                 let dictionary = try JSONSerialization.jsonObject(with: json) as? [String: Any] ?? [:]
                 
                 let ref = self.firebaseManager.database.reference().child(path)
@@ -57,7 +60,9 @@ class DatabaseService: DatabaseServiceProtocol {
                 
                 do {
                     let jsonData = try JSONSerialization.data(withJSONObject: value)
-                    let decodedObject = try JSONDecoder().decode(T.self, from: jsonData)
+                    let decoder = JSONDecoder()
+                    decoder.dateDecodingStrategy = .secondsSince1970
+                    let decodedObject = try decoder.decode(T.self, from: jsonData)
                     promise(.success(decodedObject))
                 } catch {
                     promise(.failure(error))
@@ -66,6 +71,34 @@ class DatabaseService: DatabaseServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
+    
+    func fetchAll<T: Decodable>(path: String) -> AnyPublisher<[T], Error> {
+            Future<[T], Error> { promise in
+                let ref = self.firebaseManager.database.reference().child(path)
+                ref.observeSingleEvent(of: .value) { snapshot in
+                    guard let value = snapshot.value as? [String: Any] else {
+                        promise(.success([])) // Retorna array vazio se não houver dados
+                        return
+                    }
+                    
+                    var items: [T] = []
+                    for (_, dictValue) in value {
+                        do {
+                            let jsonData = try JSONSerialization.data(withJSONObject: dictValue)
+                            let decoder = JSONDecoder()
+                            decoder.dateDecodingStrategy = .secondsSince1970
+                            let decodedObject = try decoder.decode(T.self, from: jsonData)
+                            items.append(decodedObject)
+                        } catch {
+                            print("Error decoding item: \(error)")
+                        }
+                    }
+                    
+                    promise(.success(items))
+                }
+            }
+            .eraseToAnyPublisher()
+        }
     
     func update(path: String, data: [String: Any]) -> AnyPublisher<Void, Error> {
         Future<Void, Error> { promise in

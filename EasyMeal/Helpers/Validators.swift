@@ -1,3 +1,11 @@
+//
+//  Validators.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 10/02/26.
+//
+
+
 import Foundation
 
 struct Validators {

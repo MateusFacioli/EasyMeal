@@ -5,6 +5,7 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import Foundation
 
 struct Review: Identifiable, Codable {
     let id: String
@@ -24,4 +25,9 @@ struct Review: Identifiable, Codable {
         formatter.locale = Locale(identifier: "pt_BR")
         return formatter.string(from: date)
     }
+}
+
+struct SellerReply: Codable {
+    let comment: String
+    let date: Date
 }

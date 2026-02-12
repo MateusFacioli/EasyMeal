@@ -1,5 +1,5 @@
 //
-//  Constants.swift
+//  Constants+Enums.swift
 //  EasyMeal
 //
 //  Created by Mateus Rodrigues on 10/02/26.
@@ -17,6 +17,7 @@ struct Constants {
         static let schedules = "schedules"
         static let orders = "orders"
         static let menuItems = "menu_items"
+        static let reviews = "reviews"
     }
     
     struct UserDefaultsKeys {
@@ -61,4 +62,21 @@ enum OrderHistoryFilter: String, CaseIterable {
     var title: String {
         return self.rawValue
     }
+}
+
+enum SortOption: String, CaseIterable {
+    case distance = "Distância"
+    case rating = "Avaliação"
+    case name = "Nome"
+}
+
+enum UserType: String, Codable {
+    case seller
+    case buyer
+}
+
+enum UserTypeSelection {
+    case seller
+    case buyer
+    case none
 }

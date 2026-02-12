@@ -1,4 +1,13 @@
+//
+//  ForgotPasswordView.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 10/02/26.
+//
+
+
 import SwiftUI
+import Combine
 
 struct ForgotPasswordView: View {
     @StateObject private var viewModel = ForgotPasswordViewModel()
@@ -94,45 +103,5 @@ struct ForgotPasswordView: View {
                 presentationMode.wrappedValue.dismiss()
             })
         }
-    }
-}
-
-class ForgotPasswordViewModel: ObservableObject {
-    @Published var email = ""
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var successMessage: String?
-    
-    var isEmailValid: Bool {
-        Validators.isValidEmail(email)
-    }
-    
-    private let authService: AuthServiceProtocol
-    
-    init(authService: AuthServiceProtocol = AuthService()) {
-        self.authService = authService
-    }
-    
-    func sendResetLink() {
-        guard isEmailValid else {
-            errorMessage = "Por favor, insira um email válido."
-            return
-        }
-        
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
-        
-        authService.resetPassword(email: email)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] completion in
-                self?.isLoading = false
-                if case .failure(let error) = completion {
-                    self?.errorMessage = error.localizedDescription
-                }
-            } receiveValue: { [weak self] _ in
-                self?.successMessage = "Email de recuperação enviado com sucesso! Verifique sua caixa de entrada."
-            }
-            .store(in: .init())
     }
 }
