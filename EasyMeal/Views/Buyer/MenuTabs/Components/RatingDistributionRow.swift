@@ -1,3 +1,12 @@
+//
+//  RatingDistributionRow.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import SwiftUI
+
 struct RatingDistributionRow: View {
     let starCount: Int
     let percentage: Double

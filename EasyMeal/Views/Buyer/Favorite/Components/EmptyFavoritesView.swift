@@ -1,3 +1,12 @@
+//
+//  EmptyFavoritesView.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import SwiftUI
+
 struct EmptyFavoritesView: View {
     let searchText: String
     

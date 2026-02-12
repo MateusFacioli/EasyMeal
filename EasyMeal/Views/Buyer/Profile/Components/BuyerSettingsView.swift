@@ -1,3 +1,12 @@
+//
+//  BuyerSettingsView.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import SwiftUI
+
 struct BuyerSettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @AppStorage("darkModeEnabled") private var darkModeEnabled = false

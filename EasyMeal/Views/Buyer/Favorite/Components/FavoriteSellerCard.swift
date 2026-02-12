@@ -1,3 +1,13 @@
+//
+//  FavoriteSellerCard.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import SwiftUI
+import Combine
+
 struct FavoriteSellerCard: View {
     let seller: Seller
     let isFavorite: Bool

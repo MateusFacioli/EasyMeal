@@ -5,6 +5,9 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import Combine
+import Foundation
+import SwiftUI
 
 class MenuTabViewModel: ObservableObject {
     @Published var menuItems: [MenuItem] = []

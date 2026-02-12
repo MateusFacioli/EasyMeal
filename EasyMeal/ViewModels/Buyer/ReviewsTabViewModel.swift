@@ -5,6 +5,8 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import Combine
+import Foundation
 
 class ReviewsTabViewModel: ObservableObject {
     @Published var reviews: [Review] = []

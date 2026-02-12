@@ -1,3 +1,14 @@
+//
+//  WriteReviewViewModel.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+import Combine
+import Foundation
+import UIKit
+import FirebaseAuth
+
 class WriteReviewViewModel: ObservableObject {
     @Published var isSubmitting = false
     @Published var errorMessage: String?
@@ -14,7 +25,7 @@ class WriteReviewViewModel: ObservableObject {
     
     func submitReview(sellerId: String, rating: Int, comment: String, images: [UIImage], completion: @escaping () -> Void) {
         guard let userId = FirebaseManager.shared.currentUser?.uid,
-              let userName = FirebaseManager.shared.currentUser?.displayName ?? "Cliente" else {
+              let userName = FirebaseManager.shared.currentUser?.displayName else {
             return
         }
         

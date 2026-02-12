@@ -1,3 +1,13 @@
+//
+//  MenuItemDetailView.swift
+//  EasyMeal
+//
+//  Created by Mateus Rodrigues on 11/02/26.
+//
+
+import SwiftUI
+import Combine
+
 struct MenuItemDetailView: View {
     let item: MenuItem
     let seller: Seller

@@ -5,6 +5,9 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import SwiftUI
+import Combine
+import _PhotosUI_SwiftUI
 
 struct WriteReviewView: View {
     let seller: Seller

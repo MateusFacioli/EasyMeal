@@ -5,6 +5,8 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import Combine
+import Foundation
 
 class BuyerHomeViewModel: ObservableObject {
     @Published var nearbySellers: [Seller] = []
@@ -36,7 +38,7 @@ class BuyerHomeViewModel: ObservableObject {
                 }
                 
                 // Buscar todos os sellers do Firebase
-                return self.databaseService.fetch(path: Constants.FirebasePaths.sellers)
+                return self.databaseService.fetchAll(path: Constants.FirebasePaths.sellers)
             }
             .receive(on: RunLoop.main)
             .sink { [weak self] completion in
@@ -44,20 +46,27 @@ class BuyerHomeViewModel: ObservableObject {
                 if case .failure(let error) = completion {
                     print("Error loading sellers: \(error)")
                 }
-            } receiveValue: { [weak self] sellersDict in
-                // Convert dictionary to array
-                var sellers: [Seller] = []
-                for (_, value) in sellersDict {
-                    if let sellerData = value as? [String: Any] {
-                        // Converter para Seller
-                        // Implementar decodificação apropriada
-                    }
-                }
-                
-                // Por enquanto, dados mockados
-                self?.loadMockSellers()
+            } receiveValue: { [weak self] sellers in
+                self?.nearbySellers = sellers
+                self?.calculateDistances(from: Location(latitude: -23.5505, longitude: -46.6333)) // Default SP location
+                        }
+                    .store(in: &cancellables)
             }
-            .store(in: &cancellables)
+    
+    private func calculateDistances(from userLocation: Location) {
+            for i in 0..<self.nearbySellers.count {
+                if let sellerLocation = self.nearbySellers[i].currentLocation {
+                    let distance = calculateDistance(from: userLocation, to: sellerLocation)
+                    self.nearbySellers[i].distance = distance
+                }
+            }
+        }
+        
+    private func calculateDistance(from loc1: Location, to loc2: Location) -> Double {
+        // Cálculo simplificado de distância (Haversine formula seria o ideal)
+        let latDiff = loc2.latitude - loc1.latitude
+        let lonDiff = loc2.longitude - loc1.longitude
+        return sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111 // Aproximação em km
     }
     
     private func loadMockSellers() {
@@ -72,6 +81,7 @@ class BuyerHomeViewModel: ObservableObject {
                 businessName: "Lanches do Zé",
                 description: "Os melhores lanches da região",
                 isOnline: true,
+                distance: 45.0,
                 currentLocation: Location(latitude: -23.5505, longitude: -46.6333, address: "Rua Exemplo, 123"),
                 schedules: [],
                 menuId: nil,
@@ -91,6 +101,7 @@ class BuyerHomeViewModel: ObservableObject {
                 businessName: "Doces da Maria",
                 description: "Doces caseiros e sobremesas",
                 isOnline: true,
+                distance: 38.2,
                 currentLocation: Location(latitude: -23.5510, longitude: -46.6340),
                 schedules: [],
                 menuId: nil,
@@ -110,6 +121,7 @@ class BuyerHomeViewModel: ObservableObject {
                 businessName: "Sucos Naturais João",
                 description: "Sucos frescos e saudáveis",
                 isOnline: false,
+                distance: 23.4,
                 currentLocation: Location(latitude: -23.5520, longitude: -46.6350),
                 schedules: [],
                 menuId: nil,

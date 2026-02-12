@@ -5,6 +5,7 @@
 //  Created by Mateus Rodrigues on 11/02/26.
 //
 
+import SwiftUI
 
 struct TimelineStep: View {
     let icon: String

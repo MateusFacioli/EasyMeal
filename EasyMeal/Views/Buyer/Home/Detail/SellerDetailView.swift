@@ -60,7 +60,7 @@ struct SellerDetailView: View {
                         if selectedTab == 0 {
                             AboutTab(seller: seller)
                         } else if selectedTab == 1 {
-                            MenuTab(seller: seller, showMenu: $showMenu)
+                            MenuTab(seller: seller)
                         } else if selectedTab == 2 {
                             ScheduleTab(seller: seller)
                         } else {
