@@ -8,6 +8,7 @@
 
 import Foundation
 import FirebaseAuth
+import FirebaseDatabase
 import Combine
 
 protocol AuthServiceProtocol {
@@ -15,7 +16,9 @@ protocol AuthServiceProtocol {
     func signUp(user: UserModel, password: String, businessName: String?) -> AnyPublisher<UserModel, Error>
     func signOut() throws
     func resetPassword(email: String) -> AnyPublisher<Void, Error>
-    func updatePhoneNumber(_ phoneNumber: String) -> AnyPublisher<Void, Error>
+    func deleteAccount() -> AnyPublisher<Void, Error>
+    func startPhoneVerification(phoneNumber: String, completion: @escaping (Result<String, Error>) -> Void)
+    func verifyPhoneCode(code: String, phoneNumber: String, completion: @escaping (Result<UserModel, Error>) -> Void)
     var currentUser: User? { get }
 }
 
@@ -34,6 +37,8 @@ class AuthService: AuthServiceProtocol {
         return firebaseManager.currentUser
     }
     
+    // MARK: - Sign In with Email/Password
+    //MARK: TODO IMPRIME MAS NÃO FAZ NADA
     func signIn(email: String, password: String) -> AnyPublisher<UserModel, Error> {
         Future<UserModel, Error> { [weak self] promise in
             guard let self = self else {
@@ -45,13 +50,20 @@ class AuthService: AuthServiceProtocol {
                 if let error = error {
                     promise(.failure(error))
                 } else if let firebaseUser = result?.user {
+                    print("✅ Auth success, fetching user data for: \(firebaseUser.uid)")
+                    
                     // Buscar dados do usuário no Realtime Database
                     self.fetchUserFromDatabase(userId: firebaseUser.uid)
+                        .receive(on: DispatchQueue.main)
                         .sink(receiveCompletion: { completion in
                             if case .failure(let error) = completion {
+                                print("❌ Erro ao buscar usuário: \(error)")
+                                // Se não encontrar no DB, fazer logout
+                                try? self.firebaseManager.auth.signOut()
                                 promise(.failure(error))
                             }
                         }, receiveValue: { userModel in
+                            print("✅ Usuário encontrado: \(userModel.email)")
                             promise(.success(userModel))
                         })
                         .store(in: &self.cancellables)
@@ -78,58 +90,43 @@ class AuthService: AuthServiceProtocol {
                     var newUser = user
                     newUser.id = firebaseUser.uid
                     
-                    // Salvar dados do usuário no Realtime Database
-                    self.saveUserToDatabase(user: newUser)
+                    // Atualizar display name no Auth
+                    let changeRequest = firebaseUser.createProfileChangeRequest()
+                    changeRequest.displayName = user.name
+                    changeRequest.commitChanges { error in
+                        if let error = error {
+                            print("⚠️ Erro ao atualizar display name: \(error)")
+                        }
+                    }
+                    
+                    // Determinar o caminho baseado no tipo
+                    let userTypePath = newUser.userType == .seller ? "sellers" : "buyers"
+                    let userPath = "\(Constants.FirebasePaths.users)/\(userTypePath)/\(newUser.id)"
+                    
+                    // Salvar usuário no caminho correto: users/sellers/id ou users/buyers/id
+                    self.saveUserToDatabase(user: newUser, path: userPath)
                         .flatMap { _ -> AnyPublisher<Void, Error> in
-                            // Criar perfil específico (Seller ou Buyer)
-                            if newUser.userType == .seller, let businessName = businessName {
-                                let seller = Seller(
-                                    id: newUser.id,
-                                    userId: newUser.id,
-                                    userEmail: newUser.email,
-                                    userName: newUser.name,
-                                    userPhone: newUser.phone,
-                                    businessName: businessName,
-                                    description: "",
-                                    isOnline: false,
-                                    currentLocation: nil,
-                                    schedules: [],
-                                    menuId: nil,
-                                    rating: 0.0,
-                                    totalReviews: 0,
-                                    isAvailableNow: false,
-                                    address: newUser.address,
-                                    profileImageURL: newUser.profileImageURL,
-                                    createdAt: newUser.createdAt
-                                )
-                                return self.databaseService.save(seller, path: "\(Constants.FirebasePaths.sellers)/\(newUser.id)")
-                            } else if newUser.userType == .buyer {
-                                let buyer = Buyer(
-                                    id: newUser.id,
-                                    userId: newUser.id,
-                                    userEmail: newUser.email,
-                                    userName: newUser.name,
-                                    userPhone: newUser.phone,
-                                    favoriteSellerIds: [],
-                                    searchRadius: 1000,
-                                    notificationPreferences: NotificationPreferences(),
-                                    address: newUser.address,
-                                    profileImageURL: newUser.profileImageURL,
-                                    createdAt: newUser.createdAt
-                                )
-                                return self.databaseService.save(buyer, path: "\(Constants.FirebasePaths.buyers)/\(newUser.id)")
-                            } else {
-                                // Se for seller sem businessName, retornar erro
-                                return Fail(error: NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Business name required for sellers"]))
-                                    .eraseToAnyPublisher()
+                            // Se for seller, criar dados adicionais se necessário
+                            if newUser.userType == .seller {
+                                // Você pode salvar dados extras do seller aqui se quiser
+                                return Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
                             }
+                            return Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
                         }
                         .sink(receiveCompletion: { completion in
                             if case .failure(let error) = completion {
-                                promise(.failure(error))
+                                // Se falhar, deletar o usuário do Auth
+                                firebaseUser.delete { _ in
+                                    promise(.failure(error))
+                                }
+                            } else {
+                                promise(.success(newUser))
                             }
                         }, receiveValue: { _ in
-                            promise(.success(newUser))
+                            print("✅ Usuário criado com sucesso!")
+                            print("📧 Email: \(newUser.email)")
+                            print("🆔 UID: \(newUser.id)")
+                            print("📁 Perfil salvo em: \(userPath)")
                         })
                         .store(in: &self.cancellables)
                 } else {
@@ -139,23 +136,59 @@ class AuthService: AuthServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
-    private func saveUserToDatabase(user: UserModel) -> AnyPublisher<Void, Error> {
-        // Não salvar a senha no Realtime Database
-        var userWithoutPassword = user
-        userWithoutPassword.psw = nil
+
+    // MARK: - Save User to Database (com caminho específico)
+    private func saveUserToDatabase(user: UserModel, path: String) -> AnyPublisher<Void, Error> {
+        var userData: [String: Any] = [
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "cpf_cnpj": user.cpf_cnpj,
+            "phone": user.phone,
+            "userType": user.userType.rawValue,
+            "isPhoneVerified": user.isPhoneVerified,
+            "createdAt": user.createdAt.timeIntervalSince1970
+        ]
         
-        return databaseService.save(userWithoutPassword, path: "\(Constants.FirebasePaths.users)/\(user.id)")
+        if let address = user.address {
+            userData["address"] = address
+        }
+        
+        if let profileImageURL = user.profileImageURL {
+            userData["profileImageURL"] = profileImageURL
+        }
+        
+        if let fcmToken = user.fcmToken {
+            userData["fcmToken"] = fcmToken
+        }
+        
+        // Se for seller, adicionar businessName
+        if user.userType == .seller {
+            userData["businessName"] = user.name // ou outro campo específico
+        }
+        
+        return databaseService.update(path: path, data: userData)
     }
     
+    // MARK: - Fetch User from Database
     private func fetchUserFromDatabase(userId: String) -> AnyPublisher<UserModel, Error> {
-        return databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(userId)")
+        // Tentar buscar em users/sellers/ primeiro, depois em users/buyers/
+        let sellerPath = "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)"
+        let buyerPath = "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)"
+        
+        return databaseService.fetch(path: sellerPath)
+            .catch { _ in
+                self.databaseService.fetch(path: buyerPath)
+            }
+            .eraseToAnyPublisher()
     }
     
+    // MARK: - Sign Out
     func signOut() throws {
         try firebaseManager.auth.signOut()
     }
     
+    // MARK: - Reset Password
     func resetPassword(email: String) -> AnyPublisher<Void, Error> {
         Future<Void, Error> { [weak self] promise in
             guard let self = self else {
@@ -174,12 +207,210 @@ class AuthService: AuthServiceProtocol {
         .eraseToAnyPublisher()
     }
     
-    func updatePhoneNumber(_ phoneNumber: String) -> AnyPublisher<Void, Error> {
-        Future<Void, Error> { promise in
-            // TODO: Implementar verificação de telefone com SMS
-            // Por enquanto, apenas retornar sucesso
-            promise(.success(()))
+    // MARK: - Delete Account
+    //MARK: AINDA NÃO REMOVE
+    func deleteAccount() -> AnyPublisher<Void, Error> {
+        Future<Void, Error> { [weak self] promise in
+            guard let self = self, let user = self.firebaseManager.auth.currentUser else {
+                promise(.failure(NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Usuário não autenticado"])))
+                return
+            }
+            
+            let userId = user.uid
+            
+            self.fetchUserFromDatabase(userId: userId)
+                .flatMap { user -> AnyPublisher<Void, Error> in
+                    // Criar array de publishers para deletar tudo
+                    var deleteOperations: [AnyPublisher<Void, Error>] = []
+                    
+                    // Adicionar operações específicas do tipo
+                    deleteOperations.append(contentsOf: self.getDeleteOperations(for: user, userId: userId))
+                    
+                    // Deletar usuário base
+                    let userTypePath = user.userType == .seller ? "seller" : "buyer"
+                    deleteOperations.append(
+                        self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(userTypePath)/\(userId)")
+                    )
+                    
+                    return Publishers.MergeMany(deleteOperations)
+                        .collect()
+                        .map { _ in () }
+                        .eraseToAnyPublisher()
+                }
+                .flatMap { _ -> AnyPublisher<Void, Error> in
+                    Future<Void, Error> { promise in
+                        user.delete { error in
+                            if let error = error {
+                                promise(.failure(error))
+                            } else {
+                                promise(.success(()))
+                            }
+                        }
+                    }
+                    .eraseToAnyPublisher()
+                }
+                .sink(receiveCompletion: { completion in
+                    if case .failure(let error) = completion {
+                        promise(.failure(error))
+                    } else {
+                        promise(.success(()))
+                    }
+                }, receiveValue: { _ in })
+                .store(in: &self.cancellables)
         }
         .eraseToAnyPublisher()
     }
+    
+    func startPhoneVerification(phoneNumber: String, completion: @escaping (Result<String, Error>) -> Void) {
+        PhoneAuthProvider.provider().verifyPhoneNumber(phoneNumber, uiDelegate: nil) { verificationID, error in
+            if let error = error {
+                completion(.failure(error))
+            } else if let verificationID = verificationID {
+                // Salvar verificationID no UserDefaults
+                UserDefaults.standard.set(verificationID, forKey: "authVerificationID")
+                completion(.success(verificationID))
+            }
+        }
+    }
+    
+    func verifyPhoneCode(code: String, phoneNumber: String, completion: @escaping (Result<UserModel, Error>) -> Void) {
+        guard let verificationID = UserDefaults.standard.string(forKey: "authVerificationID") else {
+            completion(.failure(NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "ID de verificação não encontrado"])))
+            return
+        }
+        
+        let credential = PhoneAuthProvider.provider().credential(
+            withVerificationID: verificationID,
+            verificationCode: code
+        )
+        
+        firebaseManager.auth.signIn(with: credential) { result, error in
+            if let error = error {
+                completion(.failure(error))
+            } else if let firebaseUser = result?.user {
+                // Verificar se usuário já existe ou criar novo
+                self.fetchUserFromDatabase(userId: firebaseUser.uid)
+                    .sink(receiveCompletion: { _ in
+                        // Se não existir, criar novo usuário
+                        let newUser = UserModel(
+                            id: firebaseUser.uid,
+                            email: firebaseUser.email ?? "",
+                            name: firebaseUser.displayName ?? "Usuário",
+                            cpf_cnpj: "",
+                            phone: phoneNumber,
+                            address: nil,
+                            userType: .buyer, // Default
+                            isPhoneVerified: true,
+                            profileImageURL: firebaseUser.photoURL?.absoluteString,
+                            createdAt: Date()
+                        )
+                        
+                        // Salvar no banco
+                        let userTypePath = "buyers"
+                        let path = "\(Constants.FirebasePaths.users)/\(userTypePath)/\(newUser.id)"
+                        
+                        self.saveUserToDatabase(user: newUser, path: path)
+                            .sink(receiveCompletion: { saveCompletion in
+                                if case .failure(let saveError) = saveCompletion {
+                                    completion(.failure(saveError))
+                                } else {
+                                    completion(.success(newUser))
+                                }
+                            }, receiveValue: { _ in })
+                            .store(in: &self.cancellables)
+                        
+                    }, receiveValue: { userModel in
+                        completion(.success(userModel))
+                    })
+                    .store(in: &self.cancellables)
+            }
+        }
+    }
 }
+
+    // MARK: - Helper Methods
+private extension AuthService {
+    func safeDelete(path: String) -> AnyPublisher<Void, Error> {
+        return databaseService.delete(path: path)
+            .catch { _ -> AnyPublisher<Void, Error> in
+                Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    func getDeleteOperations(for user: UserModel, userId: String) -> [AnyPublisher<Void, Error>] {
+        var operations: [AnyPublisher<Void, Error>] = []
+        
+        // Deletar pedidos
+        operations.append(safeDelete(path: "\(Constants.FirebasePaths.orders)/\(userId)"))
+        
+        if user.userType == .seller {
+            // Deletar seller e cardápio
+            operations.append(contentsOf: deleteSellerData(userId: userId))
+        } else {
+            // Deletar buyer
+            operations.append(safeDelete(path: "\(Constants.FirebasePaths.buyers)/\(userId)"))
+        }
+        
+        // Deletar avaliações
+        operations.append(deleteUserReviews(userId: userId))
+        
+        return operations
+    }
+    
+    func deleteSellerData(userId: String) -> [AnyPublisher<Void, Error>] {
+        var operations: [AnyPublisher<Void, Error>] = []
+        
+        let sellerPublisher = databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+            .flatMap { (seller: Seller) -> AnyPublisher<Void, Error> in
+                var sellerOps: [AnyPublisher<Void, Error>] = []
+                
+                if let menuId = seller.menuId {
+                    sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.menus)/\(menuId)"))
+                }
+                
+                sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)"))
+                
+                return Publishers.MergeMany(sellerOps)
+                    .collect()
+                    .map { _ in () }
+                    .eraseToAnyPublisher()
+            }
+            .catch { _ -> AnyPublisher<Void, Error> in
+                self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+            }
+            .eraseToAnyPublisher()
+        
+        operations.append(sellerPublisher)
+        return operations
+    }
+    
+    func deleteUserReviews(userId: String) -> AnyPublisher<Void, Error> {
+        return databaseService.fetchAll(path: Constants.FirebasePaths.reviews)
+            .flatMap { (reviews: [Review]) -> AnyPublisher<Void, Error> in
+                var reviewDeletes: [AnyPublisher<Void, Error>] = []
+                
+                // Filtrar avaliações onde o userId é o autor
+                let userReviews = reviews.filter { $0.userId == userId }
+                
+                for review in userReviews {
+                    // O caminho precisa ser reviews/sellerId/reviewId
+                    let path = "\(Constants.FirebasePaths.reviews)/\(review.sellerId)/\(review.id)"
+                    reviewDeletes.append(self.safeDelete(path: path))
+                }
+                
+                if reviewDeletes.isEmpty {
+                    return Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
+                }
+                
+                return Publishers.MergeMany(reviewDeletes)
+                    .collect()
+                    .map { _ in () }
+                    .eraseToAnyPublisher()
+            }
+            .catch { _ -> AnyPublisher<Void, Error> in
+                Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
+            }
+            .eraseToAnyPublisher()
+    }
+    }

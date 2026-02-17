@@ -11,6 +11,7 @@ import Combine
 
 struct SignupView: View {
     @EnvironmentObject var sellerAuthVM: SellerAuthViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -204,12 +205,12 @@ struct SignupView: View {
                 Spacer()
             }
         }
+        //MARK: TODO ROTA AQUI CHAMAR maintabview? é rota de entrada fica no loading infinito
         .navigationBarHidden(true)
         .background(
             NavigationLink(
-                destination: sellerAuthVM.userType == .seller ?
-                    AnyView(SellerProfileSetupView()) :
-                    AnyView(BuyerHomeView()),
+                destination: BuyerTabView()//MainTabView()
+                    .environmentObject(authViewModel),
                 isActive: $sellerAuthVM.shouldNavigateToProfile
             ) { EmptyView() }
         )

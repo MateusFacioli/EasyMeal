@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+//import GoogleSignInSwift
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
@@ -50,11 +51,16 @@ struct LoginView: View {
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
+                .sheet(isPresented: $viewModel.showForgotPassword) {
+                    ForgotPasswordView()
+                }
             }
             .padding(.horizontal)
             
             // Botão Login
-            Button(action: viewModel.login) {
+            Button(action: {
+                viewModel.login()
+            }) {
                 if viewModel.isLoading {
                     ProgressView()
                         .tint(.white)
@@ -70,6 +76,27 @@ struct LoginView: View {
             .cornerRadius(10)
             .padding(.horizontal)
             .disabled(viewModel.email.isEmpty || viewModel.password.isEmpty || viewModel.isLoading)
+            
+            // Botão para login via Google
+            Button(action: {
+                // Implementar login com Google
+            }) {
+                HStack {
+                    Image(systemName: "g.circle.fill")
+                        .foregroundColor(.red)
+                    Text("Entrar com Google")
+                        .fontWeight(.medium)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.white)
+                .foregroundColor(.primary)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
+            }
             
             if let error = viewModel.errorMessage {
                 Text(error)
@@ -91,5 +118,9 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.showForgotPassword) {
             ForgotPasswordView()
         }
+    }
+    
+    private func signInWithGoogle() {
+//        authViewModel.signInWithGoogle()
     }
 }

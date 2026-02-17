@@ -15,9 +15,10 @@ struct MainTabView: View {
         Group {
             if let user = authViewModel.currentUser {
                 if user.isSeller {
-                    SellerTabView()
+                    SellerTabView().environmentObject(authViewModel)
                 } else {
-                    BuyerTabView()
+                    //MARK: COMENTADO APARECE O MENU
+                    BuyerTabView()//.environmentObject(authViewModel)
                 }
             } else {
                 ProgressView("Carregando...")

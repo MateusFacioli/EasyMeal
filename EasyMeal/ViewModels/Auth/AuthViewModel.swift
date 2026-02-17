@@ -9,6 +9,7 @@
 import Foundation
 import FirebaseAuth
 import Combine
+import UIKit
 
 class AuthViewModel: ObservableObject {
     @Published var currentUser: UserModel?
@@ -19,38 +20,58 @@ class AuthViewModel: ObservableObject {
     private let authService: AuthServiceProtocol
     private let databaseService: DatabaseServiceProtocol
     private var cancellables = Set<AnyCancellable>()
+    private var authStateHandler: AuthStateDidChangeListenerHandle?
     
     init(authService: AuthServiceProtocol = AuthService(),
          databaseService: DatabaseServiceProtocol = DatabaseService()) {
         self.authService = authService
         self.databaseService = databaseService
-        observeAuthState()
+//        setupAuthStateListener()
     }
-    
-    private func observeAuthState() {
-        // Observar mudanças no estado de autenticação do Firebase
-        authService.currentUserPublisher
-            .receive(on: RunLoop.main)
-            .sink { [weak self] firebaseUser in
-                self?.isAuthenticated = firebaseUser != nil
-                if let userId = firebaseUser?.uid {
+    //MARK: TODO IREI IMPLEMENTAR DEPOIS O STATUS DA SESSAO
+    private func setupAuthStateListener() {
+        // Listener para mudanças no estado de autenticação
+        authStateHandler = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            DispatchQueue.main.async {
+                self?.isAuthenticated = user != nil
+                if let userId = user?.uid {
+                    print("✅ Usuário autenticado: \(userId)")
+                    self?.isAuthenticated = true
                     self?.fetchUserData(userId: userId)
                 } else {
+                    print("👤 Nenhum usuário autenticado")
+                    self?.isAuthenticated = false
                     self?.currentUser = nil
                 }
             }
-            .store(in: &cancellables)
+        }
     }
     
     private func fetchUserData(userId: String) {
-        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(userId)")
+        print("📦 Buscando dados do usuário: \(userId)")
+        let sellerPath = "\(Constants.FirebasePaths.users)/sellers/\(userId)"
+        let buyerPath = "\(Constants.FirebasePaths.users)/buyers/\(userId)"
+        
+        databaseService.fetch(path: sellerPath)
+            .catch { _ in
+                self.databaseService.fetch(path: buyerPath)
+            }
             .receive(on: RunLoop.main)
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
-                    print("Error fetching user data: \(error)")
+                    print("❌ Erro ao buscar usuário: \(error.localizedDescription)")
+
+                    if (error as NSError).code == 404 {
+                        print("⚠️ Usuário não existe no DB, fazendo logout")
+
+                        self?.signOut()
+                    }
                 }
             } receiveValue: { [weak self] (user: UserModel) in
+                print("✅ Usuário carregado: \(user.name)")
                 self?.currentUser = user
+                self?.isAuthenticated = true
+                self?.isLoading = false
             }
             .store(in: &cancellables)
     }
@@ -65,9 +86,14 @@ class AuthViewModel: ObservableObject {
                 self?.isLoading = false
                 if case .failure(let error) = completion {
                     self?.errorMessage = error.localizedDescription
+                    print("❌ Erro no login: \(error.localizedDescription)")
                 }
             } receiveValue: { [weak self] user in
+                print("✅ Login bem sucedido: \(user.email)")
                 self?.currentUser = user
+                self?.isAuthenticated = true
+                self?.fetchUserData(userId: user.id)
+                NotificationCenter.default.post(name: .didLogin, object: nil)
             }
             .store(in: &cancellables)
     }
@@ -75,14 +101,51 @@ class AuthViewModel: ObservableObject {
     func signOut() {
         do {
             try authService.signOut()
-            currentUser = nil
+            clearState()
+            print("✅ Logout realizado com sucesso")
         } catch {
             errorMessage = error.localizedDescription
+            print("❌ Erro no logout: \(error)")
+        }
+    }
+    
+    func deleteAccount() {
+        isLoading = true
+        errorMessage = nil
+        
+        authService.deleteAccount()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.errorMessage = error.localizedDescription
+                    print("❌ Erro ao deletar conta: \(error)")
+                } else {
+                    print("✅ Conta deletada com sucesso")
+                    self?.clearState()
+                    // Notify UI that account deletion succeeded
+                    NotificationCenter.default.post(name: .didDeleteAccount, object: nil)
+                }
+            } receiveValue: { _ in }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Limpar estado ao sair
+    func clearState() {
+        currentUser = nil
+        isAuthenticated = false
+        isLoading = false
+        errorMessage = nil
+    }
+    
+    deinit {
+        if let handler = authStateHandler {
+            Auth.auth().removeStateDidChangeListener(handler)
         }
     }
 }
 
-// Extensão para notificação do Firebase Auth
 extension Notification.Name {
-    static let AuthStateDidChange = Notification.Name("AuthStateDidChange")
+    static let didLogin = Notification.Name("didLogin")
+    static let didDeleteAccount = Notification.Name("didDeleteAccount")
 }

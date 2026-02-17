@@ -11,18 +11,18 @@ import Combine
 
 struct DocumentTypeView: View {
     @StateObject private var sellerAuthVM = SellerAuthViewModel()
+    @StateObject private var authViewModel = AuthViewModel()
     @State private var navigateToSignup = false
     
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
-                // Logo/Header
                 VStack(spacing: 10) {
                     Image(systemName: "cart.fill")
                         .font(.system(size: 60))
                         .foregroundColor(.blue)
                     
-                    Text("FoodBridge")
+                    Text("EasyMeal")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -34,13 +34,11 @@ struct DocumentTypeView: View {
                 
                 Spacer()
                 
-                // Seletor de Tipo
                 VStack(spacing: 20) {
                     Text("Como você quer usar o app?")
                         .font(.headline)
                     
                     VStack(spacing: 15) {
-                        // Botão Comerciante
                         Button(action: {
                             sellerAuthVM.userType = .seller
                             navigateToSignup = true
@@ -53,7 +51,6 @@ struct DocumentTypeView: View {
                             )
                         }
                         
-                        // Botão Cliente
                         Button(action: {
                             sellerAuthVM.userType = .buyer
                             navigateToSignup = true
@@ -71,7 +68,6 @@ struct DocumentTypeView: View {
                 
                 Spacer()
                 
-                // Link para Login
                 NavigationLink(destination: LoginView()) {
                     Text("Já tem uma conta? Entre aqui")
                         .foregroundColor(.blue)
@@ -82,7 +78,8 @@ struct DocumentTypeView: View {
             .background(
                 NavigationLink(
                     destination: SignupView()
-                        .environmentObject(sellerAuthVM),
+                        .environmentObject(sellerAuthVM)
+                        .environmentObject(authViewModel),
                     isActive: $navigateToSignup
                 ) { EmptyView() }
             )

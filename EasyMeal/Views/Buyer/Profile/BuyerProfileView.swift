@@ -55,7 +55,7 @@ struct BuyerProfileView: View {
                         }
                     }
                     
-                    VStack(spacing: 5) {
+                    VStack(spacing: 5) {//MARK: TODO nao esta pegando o nome nem email viewmodel vazia
                         Text(viewModel.buyer?.userName ?? "Cliente")
                             .font(.title2)
                             .fontWeight(.bold)
@@ -198,9 +198,23 @@ struct BuyerProfileView: View {
                     }
                     
                     Button(action: { showDeleteAccountAlert = true }) {
-                        Text("Excluir Conta")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        HStack {
+                            Image(systemName: "trash")
+                            Text("Excluir Conta")
+                        }
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    .alert("Excluir Conta", isPresented: $showDeleteAccountAlert) {
+                        Button("Cancelar", role: .cancel) { }
+                        Button("Excluir", role: .destructive) {
+                            authViewModel.deleteAccount()
+                        }
+                    } message: {
+                        Text("Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente excluídos.")
                     }
                 }
                 .padding(.horizontal)
@@ -230,21 +244,13 @@ struct BuyerProfileView: View {
         } message: {
             Text("Tem certeza que deseja sair da sua conta?")
         }
-        .alert("Excluir Conta", isPresented: $showDeleteAccountAlert) {
-            Button("Cancelar", role: .cancel) { }
-            Button("Excluir", role: .destructive) {
-                deleteAccount()
-            }
-        } message: {
-            Text("Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente excluídos.")
-        }
         .onAppear {
             viewModel.loadBuyerProfile()
         }
     }
     
     private func deleteAccount() {
-        // Implementar exclusão da conta
         print("Excluindo conta...")
+        authViewModel.deleteAccount()
     }
 }

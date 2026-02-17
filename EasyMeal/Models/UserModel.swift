@@ -10,7 +10,6 @@ import Foundation
 struct UserModel: Identifiable, Codable {
     var id: String = UUID().uuidString
     var email: String
-    var psw: String?
     var name: String
     var cpf_cnpj: String
     var phone: String
@@ -46,5 +45,9 @@ struct UserModel: Identifiable, Codable {
             return "(\(numbers.prefix(2))) \(numbers.dropFirst(2).prefix(4))-\(numbers.dropFirst(6))"
         }
         return phone
+    }
+    enum CodingKeys: String, CodingKey {
+            case id, email, name, cpf_cnpj, phone, address, userType
+            case isPhoneVerified, profileImageURL, createdAt, fcmToken
     }
 }

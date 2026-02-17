@@ -27,6 +27,7 @@ class SellerAuthViewModel: ObservableObject {
     
     private let authService: AuthServiceProtocol
     private var cancellables = Set<AnyCancellable>()
+    var authViewModel: AuthViewModel?
     
     var documentPlaceholder: String {
         switch userType {
@@ -103,6 +104,19 @@ class SellerAuthViewModel: ObservableObject {
         }
     }
     
+    func clearForm() {
+        documentNumber = ""
+        email = ""
+        password = ""
+        confirmPassword = ""
+        phoneNumber = ""
+        name = ""
+        address = ""
+        businessName = ""
+        errorMessage = nil
+        successMessage = nil
+    }
+    
     func signUp() {
             guard isFormValid else {
                 errorMessage = "Por favor, preencha todos os campos corretamente."
@@ -116,7 +130,6 @@ class SellerAuthViewModel: ObservableObject {
             
             let user = UserModel(
                 email: email,
-                psw: password,
                 name: userType == .seller ? businessName : name,
                 cpf_cnpj: cleanedDocument,
                 phone: phoneNumber,
@@ -139,10 +152,16 @@ class SellerAuthViewModel: ObservableObject {
                     }
                 } receiveValue: { [weak self] user in
                     self?.successMessage = "Cadastro realizado com sucesso!"
+                    
+                    if let authViewModel = self?.authViewModel {
+                            authViewModel.currentUser = user
+                            authViewModel.isAuthenticated = true
+                    }
                     self?.shouldNavigateToProfile = true
                     
                     // Salvar tipo de usuário localmente
                     UserDefaults.standard.set(user.userType.rawValue, forKey: Constants.UserDefaultsKeys.userType)
+                    self?.clearForm()
                 }
                 .store(in: &cancellables)
         }

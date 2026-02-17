@@ -25,6 +25,7 @@ struct Constants {
         static let isFirstLaunch = "is_first_launch"
         static let searchRadius = "search_radius"
         static let notificationEnabled = "notification_enabled"
+        static let authVerificationID = "authVerificationID"
     }
     
     struct Validation {
