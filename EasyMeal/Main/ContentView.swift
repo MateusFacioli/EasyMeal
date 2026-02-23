@@ -18,7 +18,7 @@ struct ContentView: View {
             } else if authViewModel.isAuthenticated {
                 MainTabView()
             } else {
-                DocumentTypeView()
+                MainHomeView()
             }
         }
         .animation(.default, value: authViewModel.isAuthenticated)

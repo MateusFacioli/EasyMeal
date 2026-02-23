@@ -1,5 +1,5 @@
 //
-//  DocumentTypeView.swift
+//  MainHomeView.swift
 //  EasyMeal
 //
 //  Created by Mateus Rodrigues on 10/02/26.
@@ -9,7 +9,7 @@
 import SwiftUI
 import Combine
 
-struct DocumentTypeView: View {
+struct MainHomeView: View {
     @StateObject private var sellerAuthVM = SellerAuthViewModel()
     @StateObject private var authViewModel = AuthViewModel()
     @State private var navigateToSignup = false
@@ -68,7 +68,7 @@ struct DocumentTypeView: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: LoginView()) {
+                NavigationLink(destination: LoginView().environmentObject(authViewModel)) {
                     Text("Já tem uma conta? Entre aqui")
                         .foregroundColor(.blue)
                 }

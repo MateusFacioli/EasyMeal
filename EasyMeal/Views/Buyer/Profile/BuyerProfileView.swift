@@ -17,6 +17,8 @@ struct BuyerProfileView: View {
     @State private var showSettings = false
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
+    @State private var showHomeAfterLogout = false
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         ScrollView {
@@ -221,6 +223,11 @@ struct BuyerProfileView: View {
                 .padding(.bottom, 30)
             }
         }
+        .onChange(of: authViewModel.isAuthenticated) { isAuthenticated in
+            if !isAuthenticated {
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
         .navigationTitle("Perfil")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -240,12 +247,20 @@ struct BuyerProfileView: View {
             Button("Cancelar", role: .cancel) { }
             Button("Sair", role: .destructive) {
                 authViewModel.signOut()
+               showHomeAfterLogout = true
             }
         } message: {
             Text("Tem certeza que deseja sair da sua conta?")
         }
         .onAppear {
-            viewModel.loadBuyerProfile()
+            guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
+            viewModel.loadBuyerProfile(userId: userId)
+        }
+        .onChange(of: authViewModel.isAuthenticated) {
+            isAuthenticated in
+            if !isAuthenticated {
+                presentationMode.wrappedValue.dismiss()
+            }
         }
     }
     

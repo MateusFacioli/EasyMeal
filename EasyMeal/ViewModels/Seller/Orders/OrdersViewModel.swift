@@ -118,7 +118,7 @@ class OrdersViewModel: ObservableObject {
             "status": status.rawValue,
             "updatedAt": Date().timeIntervalSince1970
         ]
-        
+        //MARK: TODO VERIFY PATH
         databaseService.update(path: "\(Constants.FirebasePaths.orders)/\(orderId)", data: data)
             .receive(on: RunLoop.main)
             .sink { completion in

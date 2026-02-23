@@ -11,18 +11,23 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     
+    //MARK: TODO SEM E COM .environmentObject(authViewModel) ESTÁ FICANDO NO FALLBACK PROGRESSVIEW
     var body: some View {
         Group {
             if let user = authViewModel.currentUser {
                 if user.isSeller {
                     SellerTabView().environmentObject(authViewModel)
                 } else {
-                    //MARK: COMENTADO APARECE O MENU
-                    BuyerTabView()//.environmentObject(authViewModel)
+                    BuyerTabView().environmentObject(authViewModel)
                 }
             } else {
                 ProgressView("Carregando...")
             }
+        }
+        .onAppear {
+            // Se o usuário ainda não estiver carregado, tente inicializar/atualizar
+            // Caso seu AuthViewModel possua algum método de refresh, chame-o aqui.
+            // Ex: authViewModel.refreshCurrentUser()
         }
     }
 }
@@ -33,6 +38,11 @@ struct SellerTabView: View {
             SellerDashboardView()
                 .tabItem {
                     Label("Início", systemImage: "house.fill")
+                }
+            
+            FinancialView()
+                .tabItem {
+                    Label("Financeiro", systemImage: "dollarsign.circle")
                 }
             
             OrdersView()
@@ -75,3 +85,4 @@ struct BuyerTabView: View {
         .accentColor(.green)
     }
 }
+

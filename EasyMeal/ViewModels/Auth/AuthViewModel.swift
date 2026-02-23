@@ -12,13 +12,13 @@ import Combine
 import UIKit
 
 class AuthViewModel: ObservableObject {
-    @Published var currentUser: UserModel?
+    @Published var currentUser: UserModel?//User?
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isAuthenticated = false
     
-    private let authService: AuthServiceProtocol
-    private let databaseService: DatabaseServiceProtocol
+    private let authService: AuthServiceProtocol//AuthService
+    private let databaseService: DatabaseServiceProtocol//DatabaseService
     private var cancellables = Set<AnyCancellable>()
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     
@@ -28,20 +28,17 @@ class AuthViewModel: ObservableObject {
         self.databaseService = databaseService
 //        setupAuthStateListener()
     }
-    //MARK: TODO IREI IMPLEMENTAR DEPOIS O STATUS DA SESSAO
+    
     private func setupAuthStateListener() {
-        // Listener para mudanças no estado de autenticação
         authStateHandler = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+            guard let self = self else { return }
             DispatchQueue.main.async {
-                self?.isAuthenticated = user != nil
-                if let userId = user?.uid {
-                    print("✅ Usuário autenticado: \(userId)")
-                    self?.isAuthenticated = true
-                    self?.fetchUserData(userId: userId)
+                if let user = user {
+                    self.isAuthenticated = true
+                    self.fetchUserData(userId: user.uid)
                 } else {
-                    print("👤 Nenhum usuário autenticado")
-                    self?.isAuthenticated = false
-                    self?.currentUser = nil
+                    self.isAuthenticated = false
+                    self.currentUser = nil
                 }
             }
         }

@@ -27,12 +27,11 @@ class BuyerProfileViewModel: ObservableObject {
         self.databaseService = databaseService
     }
     
-    func loadBuyerProfile() {
-        guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
+    func loadBuyerProfile(userId: String) {
         
         isLoading = true
         
-        databaseService.fetch(path: "\(Constants.FirebasePaths.buyers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { [weak self] completion in
                 self?.isLoading = false

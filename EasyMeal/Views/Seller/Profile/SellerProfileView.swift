@@ -12,9 +12,13 @@ import FirebaseAuth
 struct SellerProfileView: View {
     @StateObject private var viewModel = SellerProfileViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var showEditProfile = false
     @State private var showSettings = false
     @State private var showLogoutAlert = false
+    @State private var showLocationSetup = false
+    @State private var showHomeAfterLogout = false
     
     var body: some View {
         ScrollView {
@@ -124,12 +128,41 @@ struct SellerProfileView: View {
                         action: { showEditProfile = true }
                     )
                     
-                    InfoCard(
-                        icon: "mappin.circle",
-                        title: "Localização",
-                        value: viewModel.seller?.currentLocation?.address ?? "Não definida",
-                        action: { /* Navegar para localização */ }
-                    )
+                    // Updated Location info row with interactive button to change location
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(alignment: .top) {
+                            Image(systemName: "mappin.circle")
+                                .foregroundColor(.blue)
+                                .font(.title3)
+                                .frame(width: 30)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Localização")
+                                    .font(.headline)
+                                if let location = viewModel.seller?.currentLocation {
+                                    Text(location.address ?? "")
+                                        .font(.subheadline)
+                                        .foregroundColor(.primary)
+                                    if let placeName = location.placeName, !placeName.isEmpty {
+                                        Text(placeName)
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                } else {
+                                    Text("Não definida")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            Spacer()
+                        }
+                        Button(action: { showLocationSetup = true }) {
+                            Text("Alterar Localização")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .underline()
+                        }
+                        .padding(.leading, 35)
+                    }
                     
                     InfoCard(
                         icon: "clock",
@@ -243,10 +276,21 @@ struct SellerProfileView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .sheet(isPresented: $showLocationSetup, onDismiss: {
+            // Refresh seller info after location update
+            guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
+            viewModel.loadSellerProfile(userId: userId)
+        }) {
+            LocationSetupView()
+        }
+        .fullScreenCover(isPresented: $showHomeAfterLogout) {
+            MainHomeView()
+        }
         .alert("Sair da Conta", isPresented: $showLogoutAlert) {
             Button("Cancelar", role: .cancel) { }
             Button("Sair", role: .destructive) {
                 authViewModel.signOut()
+                showHomeAfterLogout = true
             }
         } message: {
             Text("Tem certeza que deseja sair da sua conta?")
@@ -255,5 +299,11 @@ struct SellerProfileView: View {
             guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
             viewModel.loadSellerProfile(userId: userId)
         }
+        .onChange(of: authViewModel.isAuthenticated) { isAuthenticated in
+            if !isAuthenticated {
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
     }
 }
+

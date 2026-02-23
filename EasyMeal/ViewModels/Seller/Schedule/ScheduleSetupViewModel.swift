@@ -41,7 +41,7 @@ class ScheduleSetupViewModel: ObservableObject {
     func loadSchedules() {
         guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
         
-        databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {
@@ -110,7 +110,7 @@ class ScheduleSetupViewModel: ObservableObject {
             ] as [String: Any]
         }
         
-        databaseService.update(path: "\(Constants.FirebasePaths.sellers)/\(userId)", data: ["schedules": schedulesData])
+        databaseService.update(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)", data: ["schedules": schedulesData])
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {

@@ -11,6 +11,8 @@ import Combine
 struct OrderDetailView: View {
     let order: Order
     @Environment(\.presentationMode) var presentationMode
+    @State private var showConfirmAlert = false
+    @State private var showCancelAlert = false
     
     var body: some View {
         NavigationView {
@@ -90,7 +92,7 @@ struct OrderDetailView: View {
                     // Ações
                     if order.status == .pending {
                         VStack(spacing: 10) {
-                            Button(action: { /* Confirmar */ }) {
+                            Button(action: { showConfirmAlert = true }) {
                                 Text("Confirmar Pedido")
                                     .fontWeight(.semibold)
                                     .frame(maxWidth: .infinity)
@@ -100,7 +102,7 @@ struct OrderDetailView: View {
                                     .cornerRadius(10)
                             }
                             
-                            Button(action: { /* Cancelar */ }) {
+                            Button(action: { showCancelAlert = true }) {
                                 Text("Cancelar Pedido")
                                     .fontWeight(.semibold)
                                     .frame(maxWidth: .infinity)
@@ -119,6 +121,26 @@ struct OrderDetailView: View {
             .navigationBarItems(trailing: Button("Fechar") {
                 presentationMode.wrappedValue.dismiss()
             })
+            .alert("Confirmar Pedido", isPresented: $showConfirmAlert) {
+                Button("Cancelar", role: .cancel) { }
+                Button("Confirmar", role: .destructive) {
+                    // Call confirm order logic here
+                    // e.g., viewModel.confirmOrder(order)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            } message: {
+                Text("Tem certeza que deseja confirmar este pedido?")
+            }
+            .alert("Cancelar Pedido", isPresented: $showCancelAlert) {
+                Button("Voltar", role: .cancel) { }
+                Button("Cancelar Pedido", role: .destructive) {
+                    // Call cancel order logic here
+                    // e.g., viewModel.cancelOrder(order)
+                    presentationMode.wrappedValue.dismiss()
+                }
+            } message: {
+                Text("Tem certeza que deseja cancelar este pedido?")
+            }
         }
     }
     

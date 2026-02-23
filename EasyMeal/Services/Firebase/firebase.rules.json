@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "users": {
+      "sellers": {
+        "$uid": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      },
+      "buyers": {
+        "$uid": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+    "sellers": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "menus": {
+      "$menuId": {
+        ".read": "auth != null",
+        ".write": "root.child('users').child('sellers').child(auth.uid).child('menuId').val() === $menuId"
+      }
+    },
+    "orders": {
+      "$orderId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "reviews": {
+      "$sellerId": {
+        "$reviewId": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    }
+  }
+}

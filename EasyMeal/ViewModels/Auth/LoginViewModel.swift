@@ -14,6 +14,7 @@ class LoginViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showForgotPassword = false
+    @Published var didLoginAsSeller = false
     
     private let authService: AuthServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -38,9 +39,12 @@ class LoginViewModel: ObservableObject {
                 if case .failure(let error) = completion {
                     self?.errorMessage = error.localizedDescription
                 }
-            } receiveValue: { _ in
-                // Login bem sucedido - navegação é gerenciada pelo AuthViewModel
+            } receiveValue: { [weak self] user in
+                if user.userType == .seller {
+                    self?.didLoginAsSeller = true
+                }
             }
-            .store(in: &cancellables) // CORRIGIDO: adicionado & e usando a propriedade
+            .store(in: &cancellables)
     }
 }
+

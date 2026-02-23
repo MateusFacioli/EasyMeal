@@ -44,7 +44,7 @@ class SellerDashboardViewModel: ObservableObject {
     }
     
     private func loadSellerData(userId: String) {
-        databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {
@@ -90,7 +90,7 @@ class SellerDashboardViewModel: ObservableObject {
     }
     
     private func loadSchedules(userId: String) {
-        databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {
@@ -126,7 +126,7 @@ class SellerDashboardViewModel: ObservableObject {
             "placeName": location.placeName ?? ""
         ]
         
-        databaseService.update(path: "\(Constants.FirebasePaths.sellers)/\(userId)", data: ["currentLocation": locationData])
+        databaseService.update(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)", data: ["currentLocation": locationData])
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {

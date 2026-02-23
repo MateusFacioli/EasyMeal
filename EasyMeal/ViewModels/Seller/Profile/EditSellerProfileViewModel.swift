@@ -40,7 +40,7 @@ class EditSellerProfileViewModel: ObservableObject {
         
         isLoading = true
         
-        databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -119,7 +119,7 @@ class EditSellerProfileViewModel: ObservableObject {
             "updatedAt": Date().timeIntervalSince1970
         ]
         
-        databaseService.update(path: "\(Constants.FirebasePaths.sellers)/\(userId)", data: updates)
+        databaseService.update(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)", data: updates)
             .receive(on: RunLoop.main)
             .sink { [weak self] result in
                 self?.isLoading = false

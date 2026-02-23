@@ -209,7 +209,7 @@ struct SignupView: View {
         .navigationBarHidden(true)
         .background(
             NavigationLink(
-                destination: BuyerTabView()//MainTabView()
+                destination: SellerTabView()//MainTabView()
                     .environmentObject(authViewModel),
                 isActive: $sellerAuthVM.shouldNavigateToProfile
             ) { EmptyView() }

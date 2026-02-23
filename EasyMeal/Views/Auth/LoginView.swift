@@ -14,6 +14,7 @@ struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
     @Environment(\.presentationMode) var presentationMode
+    @State private var showSellerHome = false
     
     var body: some View {
         VStack(spacing: 30) {
@@ -65,7 +66,7 @@ struct LoginView: View {
                     ProgressView()
                         .tint(.white)
                 } else {
-                    Text("Entrar")
+                    Text("Logar")
                         .fontWeight(.semibold)
                 }
             }
@@ -108,7 +109,7 @@ struct LoginView: View {
             Spacer()
             
             // Link para Cadastro
-            NavigationLink(destination: DocumentTypeView()) {
+            NavigationLink(destination: MainHomeView()) {
                 Text("Não tem uma conta? Cadastre-se")
                     .foregroundColor(.blue)
             }
@@ -118,9 +119,13 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.showForgotPassword) {
             ForgotPasswordView()
         }
-    }
-    
-    private func signInWithGoogle() {
-//        authViewModel.signInWithGoogle()
+        .onChange(of: viewModel.didLoginAsSeller) { isSeller in
+            if isSeller {
+                showSellerHome = true
+            }
+        }
+        .fullScreenCover(isPresented: $showSellerHome) {
+            MainTabView()
+        }
     }
 }

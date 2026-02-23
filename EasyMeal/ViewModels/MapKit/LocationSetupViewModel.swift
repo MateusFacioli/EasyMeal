@@ -89,7 +89,7 @@ class LocationSetupViewModel: ObservableObject {
             "placeName": location.placeName ?? ""
         ]
         
-        databaseService.update(path: "\(Constants.FirebasePaths.sellers)/\(userId)", data: ["currentLocation": locationData])
+        databaseService.update(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)", data: ["currentLocation": locationData])
             .receive(on: RunLoop.main)
             .sink { [weak self] completion in
                 self?.isLoading = false

@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import CoreLocation
 
 class BuyerHomeViewModel: ObservableObject {
     @Published var nearbySellers: [Seller] = []
@@ -15,7 +16,8 @@ class BuyerHomeViewModel: ObservableObject {
     @Published var searchRadius: Double = 1000 // 1km default
     @Published var showOnlyOpen = true
     @Published var sortBy: SortOption = .distance
-    
+    @Published var buyerLocation: CLLocation?
+
     private let databaseService: DatabaseServiceProtocol
     private let locationService: LocationServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -37,6 +39,9 @@ class BuyerHomeViewModel: ObservableObject {
                         .eraseToAnyPublisher()
                 }
                 
+                // Update buyerLocation with CLLocation
+                self.buyerLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+
                 // Buscar todos os sellers do Firebase
                 return self.databaseService.fetchAll(path: Constants.FirebasePaths.sellers)
             }
@@ -48,11 +53,16 @@ class BuyerHomeViewModel: ObservableObject {
                 }
             } receiveValue: { [weak self] sellers in
                 self?.nearbySellers = sellers
-                self?.calculateDistances(from: Location(latitude: -23.5505, longitude: -46.6333)) // Default SP location
-                        }
-                    .store(in: &cancellables)
+                if let location = self?.buyerLocation {
+                    let userLoc = Location(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
+                    self?.calculateDistances(from: userLoc) // Use actual user location
+                } else {
+                    self?.calculateDistances(from: Location(latitude: -23.5505, longitude: -46.6333)) // Default SP location fallback
+                }
             }
-    
+            .store(in: &cancellables)
+    }
+
     private func calculateDistances(from userLocation: Location) {
             for i in 0..<self.nearbySellers.count {
                 if let sellerLocation = self.nearbySellers[i].currentLocation {

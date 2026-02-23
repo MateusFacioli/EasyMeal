@@ -38,7 +38,6 @@ class AuthService: AuthServiceProtocol {
     }
     
     // MARK: - Sign In with Email/Password
-    //MARK: TODO IMPRIME MAS NÃO FAZ NADA
     func signIn(email: String, password: String) -> AnyPublisher<UserModel, Error> {
         Future<UserModel, Error> { [weak self] promise in
             guard let self = self else {
@@ -141,6 +140,7 @@ class AuthService: AuthServiceProtocol {
     private func saveUserToDatabase(user: UserModel, path: String) -> AnyPublisher<Void, Error> {
         var userData: [String: Any] = [
             "id": user.id,
+            "userId": user.id,
             "email": user.email,
             "name": user.name,
             "cpf_cnpj": user.cpf_cnpj,
@@ -227,7 +227,7 @@ class AuthService: AuthServiceProtocol {
                     deleteOperations.append(contentsOf: self.getDeleteOperations(for: user, userId: userId))
                     
                     // Deletar usuário base
-                    let userTypePath = user.userType == .seller ? "seller" : "buyer"
+                    let userTypePath = user.userType == .seller ? "sellers" : "buyers"
                     deleteOperations.append(
                         self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(userTypePath)/\(userId)")
                     )
@@ -342,14 +342,14 @@ private extension AuthService {
         var operations: [AnyPublisher<Void, Error>] = []
         
         // Deletar pedidos
-        operations.append(safeDelete(path: "\(Constants.FirebasePaths.orders)/\(userId)"))
+        operations.append(safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.orders)/\(userId)"))
         
         if user.userType == .seller {
             // Deletar seller e cardápio
             operations.append(contentsOf: deleteSellerData(userId: userId))
         } else {
             // Deletar buyer
-            operations.append(safeDelete(path: "\(Constants.FirebasePaths.buyers)/\(userId)"))
+            operations.append(safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)"))
         }
         
         // Deletar avaliações
@@ -361,15 +361,15 @@ private extension AuthService {
     func deleteSellerData(userId: String) -> [AnyPublisher<Void, Error>] {
         var operations: [AnyPublisher<Void, Error>] = []
         
-        let sellerPublisher = databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        let sellerPublisher = databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .flatMap { (seller: Seller) -> AnyPublisher<Void, Error> in
                 var sellerOps: [AnyPublisher<Void, Error>] = []
                 
                 if let menuId = seller.menuId {
-                    sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.menus)/\(menuId)"))
+                    sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.menus)/\(menuId)"))
                 }
                 
-                sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)"))
+                sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)"))
                 
                 return Publishers.MergeMany(sellerOps)
                     .collect()
@@ -377,14 +377,14 @@ private extension AuthService {
                     .eraseToAnyPublisher()
             }
             .catch { _ -> AnyPublisher<Void, Error> in
-                self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+                self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             }
             .eraseToAnyPublisher()
         
         operations.append(sellerPublisher)
         return operations
     }
-    
+    //MARK: TODO VERIFY PATH
     func deleteUserReviews(userId: String) -> AnyPublisher<Void, Error> {
         return databaseService.fetchAll(path: Constants.FirebasePaths.reviews)
             .flatMap { (reviews: [Review]) -> AnyPublisher<Void, Error> in
@@ -414,3 +414,4 @@ private extension AuthService {
             .eraseToAnyPublisher()
     }
     }
+

@@ -34,7 +34,7 @@ class EditBuyerProfileViewModel: ObservableObject {
     func loadProfile() {
         guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
         
-        databaseService.fetch(path: "\(Constants.FirebasePaths.buyers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {
@@ -76,7 +76,7 @@ class EditBuyerProfileViewModel: ObservableObject {
             createdAt: Date() // Manter data original
         )
         
-        databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.buyers)/\(userId)")
+        databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {

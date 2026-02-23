@@ -71,7 +71,7 @@ class MenuSetupViewModel: ObservableObject {
     func loadMenu() {
         guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
         
-        databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
             .receive(on: RunLoop.main)
             .sink { completion in
                 if case .failure(let error) = completion {
@@ -85,6 +85,7 @@ class MenuSetupViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    //MARK: TODO VERIFY PATH
     private func loadMenuItems(menuId: String) {
         databaseService.fetch(path: "\(Constants.FirebasePaths.menus)/\(menuId)")
             .receive(on: RunLoop.main)
@@ -143,7 +144,7 @@ class MenuSetupViewModel: ObservableObject {
             self.saveMenuToDatabase(imageURLs: imageURLs)
         }
     }
-    
+    //MARK: TODO VERIFY PATH
     private func uploadImages(completion: @escaping ([String]) -> Void) {
         var uploadedURLs: [String] = []
         let group = DispatchGroup()
@@ -190,13 +191,13 @@ class MenuSetupViewModel: ObservableObject {
             isActive: true,
             lastUpdated: Date()
         )
-        
+        //MARK: TODO VERIFY PATH
         // Salvar menu
         databaseService.save(menu, path: "\(Constants.FirebasePaths.menus)/\(menu.id)")
             .flatMap { _ in
                 // Atualizar referência no seller
                 self.databaseService.update(
-                    path: "\(Constants.FirebasePaths.sellers)/\(userId)",
+                    path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)",
                     data: ["menuId": menu.id]
                 )
             }

@@ -27,7 +27,7 @@ class FavoritesViewModel: ObservableObject {
         isLoading = true
         
         // Primeiro carregar os IDs dos favoritos do usuário
-        databaseService.fetch(path: "\(Constants.FirebasePaths.buyers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .flatMap { [weak self] (buyer: Buyer) -> AnyPublisher<[Seller], Error> in
                 guard let self = self else {
                     return Fail(error: NSError(domain: "FavoritesViewModel", code: -1, userInfo: nil))
@@ -36,7 +36,7 @@ class FavoritesViewModel: ObservableObject {
                 
                 // Buscar cada seller favorito
                 let publishers = buyer.favoriteSellerIds.map { sellerId in
-                    self.databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(sellerId)")
+                    self.databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(sellerId)")
                         .catch { _ in
                             // Se algum seller não existir mais, retornar um publisher vazio
                             return Empty<Seller, Error>().eraseToAnyPublisher()
@@ -89,13 +89,13 @@ class FavoritesViewModel: ObservableObject {
         guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
         
         // Primeiro, carregar o buyer atual
-        databaseService.fetch(path: "\(Constants.FirebasePaths.buyers)/\(userId)")
+        databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .flatMap { [weak self] (buyer: Buyer) -> AnyPublisher<Void, Error> in
                 var updatedBuyer = buyer
                 updatedBuyer.favoriteSellerIds.removeAll { $0 == sellerId }
                 
                 // Salvar buyer atualizado
-                return self?.databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.buyers)/\(userId)") ?? Empty().eraseToAnyPublisher()
+                return self?.databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)") ?? Empty().eraseToAnyPublisher()
             }
             .receive(on: RunLoop.main)
             .sink { completion in
