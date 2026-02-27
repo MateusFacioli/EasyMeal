@@ -29,8 +29,6 @@ class BuyerHomeViewModel: ObservableObject {
     }
     
     func loadNearbySellers() {
-        isLoading = true
-        
         // Primeiro, obter localização atual
         locationService.getCurrentLocation()
             .flatMap { [weak self] userLocation -> AnyPublisher<[Seller], Error> in
@@ -38,7 +36,7 @@ class BuyerHomeViewModel: ObservableObject {
                     return Fail(error: NSError(domain: "BuyerHomeViewModel", code: -1, userInfo: nil))
                         .eraseToAnyPublisher()
                 }
-                
+                self.isLoading = true
                 // Update buyerLocation with CLLocation
                 self.buyerLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
 

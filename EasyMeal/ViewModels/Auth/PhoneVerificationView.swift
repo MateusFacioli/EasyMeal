@@ -51,7 +51,7 @@ struct PhoneVerificationView: View {
             }
             
             if isLoading {
-                ProgressView()
+                ProgressView("Carregando... phoneverification")
             }
             
             if !isCodeSent {

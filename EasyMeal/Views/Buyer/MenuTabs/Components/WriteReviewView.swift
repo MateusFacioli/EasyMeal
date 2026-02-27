@@ -103,7 +103,7 @@ struct WriteReviewView: View {
             )
             .overlay {
                 if viewModel.isSubmitting {
-                    ProgressView()
+                    ProgressView("Carregando... writereview")
                         .scaleEffect(1.5)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color.black.opacity(0.2))

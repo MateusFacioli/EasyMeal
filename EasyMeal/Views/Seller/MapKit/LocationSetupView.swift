@@ -116,7 +116,7 @@ struct LocationSetupView: View {
                                 }
                             }) {
                                 if viewModel.isLoading {
-                                    ProgressView()
+                                    ProgressView("Carregando... locationsetupview")
                                         .tint(.white)
                                 } else {
                                     Text("Salvar Localização")

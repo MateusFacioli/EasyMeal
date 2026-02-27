@@ -10,24 +10,36 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    
-    //MARK: TODO SEM E COM .environmentObject(authViewModel) ESTÁ FICANDO NO FALLBACK PROGRESSVIEW
+
     var body: some View {
         Group {
-            if let user = authViewModel.currentUser {
+            switch (authViewModel.isAuthenticated, authViewModel.currentUser) {
+            case (false, _):
+                // Not authenticated: show the lightweight entry (MainHomeView) instead of blank
+                MainHomeView()
+                    .environmentObject(authViewModel)
+            case (true, .some(let user)):
                 if user.isSeller {
-                    SellerTabView().environmentObject(authViewModel)
+                    SellerTabView()
                 } else {
-                    BuyerTabView().environmentObject(authViewModel)
+                    BuyerTabView()
                 }
-            } else {
-                ProgressView("Carregando...")
+            case (true, .none):
+                // Authenticated but user not hydrated: show progress with retry
+                VStack(spacing: 12) {
+                    ProgressView("Carregando... maintabview")
+                    Button("Tentar novamente") {
+                        authViewModel.refreshCurrentUser()
+                    }
+                    .font(.footnote)
+                }
+                .onAppear {
+                    // Avoid tight loops: only fetch if we don't have it yet
+                    if authViewModel.currentUser == nil {
+                        authViewModel.refreshCurrentUser()
+                    }
+                }
             }
-        }
-        .onAppear {
-            // Se o usuário ainda não estiver carregado, tente inicializar/atualizar
-            // Caso seu AuthViewModel possua algum método de refresh, chame-o aqui.
-            // Ex: authViewModel.refreshCurrentUser()
         }
     }
 }

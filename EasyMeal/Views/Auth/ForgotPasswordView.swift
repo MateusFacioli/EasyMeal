@@ -56,7 +56,7 @@ struct ForgotPasswordView: View {
                 // Botão Enviar
                 Button(action: viewModel.sendResetLink) {
                     if viewModel.isLoading {
-                        ProgressView()
+                        ProgressView("Carregando... forgotpassword")
                             .tint(.white)
                     } else {
                         Text("Enviar Link de Recuperação")

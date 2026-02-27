@@ -156,7 +156,7 @@ struct BuyerHomeView: View {
             // Lista de Comerciantes
             sellersList
         }
-        .padding(.top, 44)
+        .padding(.top, 16)
     }
     
     // MARK: - Search Bar Component
@@ -205,7 +205,7 @@ struct BuyerHomeView: View {
     @ViewBuilder
     private var sellersList: some View {
         if viewModel.isLoading {
-            ProgressView("Carregando comerciantes...")
+            ProgressView("Carregando comerciantes... buyerhomeview")
                 .frame(maxHeight: .infinity)
                 .background(Color(.systemBackground).opacity(0.9))
         } else if filteredSellers.isEmpty {
@@ -223,7 +223,7 @@ struct BuyerHomeView: View {
                 }
                 .padding()
             }
-            .frame(maxHeight: 260)
+            .frame(maxHeight: 8)
             .background(Color(.systemBackground).opacity(0.9))
         }
     }

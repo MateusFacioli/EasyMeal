@@ -60,10 +60,10 @@ struct LoginView: View {
             
             // Botão Login
             Button(action: {
-                viewModel.login()
+                authViewModel.signIn(email: viewModel.email, password: viewModel.password)
             }) {
                 if viewModel.isLoading {
-                    ProgressView()
+                    ProgressView("Carregando... loginview")
                         .tint(.white)
                 } else {
                     Text("Logar")
@@ -118,14 +118,6 @@ struct LoginView: View {
         .navigationBarHidden(true)
         .sheet(isPresented: $viewModel.showForgotPassword) {
             ForgotPasswordView()
-        }
-        .onChange(of: viewModel.didLoginAsSeller) { isSeller in
-            if isSeller {
-                showSellerHome = true
-            }
-        }
-        .fullScreenCover(isPresented: $showSellerHome) {
-            MainTabView()
         }
     }
 }

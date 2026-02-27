@@ -172,7 +172,7 @@ struct SignupView: View {
                 // Botão Cadastrar
                 Button(action: sellerAuthVM.signUp) {
                     if sellerAuthVM.isLoading {
-                        ProgressView()
+                        ProgressView("Carregando... signupview")
                             .tint(.white)
                     } else {
                         Text("Cadastrar")
@@ -209,7 +209,7 @@ struct SignupView: View {
         .navigationBarHidden(true)
         .background(
             NavigationLink(
-                destination: SellerTabView()//MainTabView()
+                destination: MainTabView()
                     .environmentObject(authViewModel),
                 isActive: $sellerAuthVM.shouldNavigateToProfile
             ) { EmptyView() }

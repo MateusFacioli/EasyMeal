@@ -87,7 +87,7 @@ struct EditSellerProfileView: View {
             )
             .overlay {
                 if viewModel.isLoading {
-                    ProgressView()
+                    ProgressView("Carregando... editsellerprofileview")
                         .scaleEffect(1.5)
                 }
             }

@@ -58,11 +58,11 @@ struct SellerProfileView: View {
                     }
                     
                     VStack(spacing: 5) {
-                        Text(viewModel.seller?.businessName ?? "Seu Negócio")
+                        Text(viewModel.seller?.businessName ?? authViewModel.currentUser?.name ?? "Seu Negócio")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text(viewModel.seller?.userEmail ?? "email@exemplo.com")
+                        Text(viewModel.seller?.userEmail ?? authViewModel.currentUser?.email ?? "email@exemplo.com")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -296,7 +296,8 @@ struct SellerProfileView: View {
             Text("Tem certeza que deseja sair da sua conta?")
         }
         .onAppear {
-            guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
+            let userId = FirebaseManager.shared.currentUser?.uid ?? authViewModel.currentUser?.id
+            guard let userId = userId else { return }
             viewModel.loadSellerProfile(userId: userId)
         }
         .onChange(of: authViewModel.isAuthenticated) { isAuthenticated in

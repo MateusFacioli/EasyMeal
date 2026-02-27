@@ -13,7 +13,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if authViewModel.isLoading {
-                ProgressView()
+                ProgressView("Carregando... contentview")
                     .scaleEffect(1.5)
             } else if authViewModel.isAuthenticated {
                 MainTabView()

@@ -11,10 +11,15 @@ import Combine
 
 struct MainHomeView: View {
     @StateObject private var sellerAuthVM = SellerAuthViewModel()
-    @StateObject private var authViewModel = AuthViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var navigateToSignup = false
     
     var body: some View {
+        Group {
+            if authViewModel.isAuthenticated, let _ = authViewModel.currentUser {
+                MainTabView()
+                    .environmentObject(authViewModel)
+            } else {
         NavigationView {
             VStack(spacing: 30) {
                 VStack(spacing: 10) {
@@ -83,6 +88,14 @@ struct MainHomeView: View {
                     isActive: $navigateToSignup
                 ) { EmptyView() }
             )
+        }
+                .onAppear {
+                    // Se já estiver autenticado, tenta hidratar o usuário
+                    if authViewModel.isAuthenticated, authViewModel.currentUser == nil {
+                        authViewModel.refreshCurrentUser()
+                    }
+                }
+            }
         }
     }
 }

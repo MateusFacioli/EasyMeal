@@ -26,7 +26,7 @@ class AuthViewModel: ObservableObject {
          databaseService: DatabaseServiceProtocol = DatabaseService()) {
         self.authService = authService
         self.databaseService = databaseService
-//        setupAuthStateListener()
+        setupAuthStateListener()
     }
     
     private func setupAuthStateListener() {
@@ -34,11 +34,13 @@ class AuthViewModel: ObservableObject {
             guard let self = self else { return }
             DispatchQueue.main.async {
                 if let user = user {
+                    // Firebase user exists: mark authenticated and hydrate
                     self.isAuthenticated = true
+                    self.isLoading = true
                     self.fetchUserData(userId: user.uid)
                 } else {
-                    self.isAuthenticated = false
-                    self.currentUser = nil
+                    // User signed out or deleted: clear all state and stop loading
+                    self.clearState()
                 }
             }
         }
@@ -57,12 +59,9 @@ class AuthViewModel: ObservableObject {
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
                     print("❌ Erro ao buscar usuário: \(error.localizedDescription)")
-
-                    if (error as NSError).code == 404 {
-                        print("⚠️ Usuário não existe no DB, fazendo logout")
-
-                        self?.signOut()
-                    }
+                    self?.currentUser = nil
+                    self?.isAuthenticated = false
+                    self?.isLoading = false
                 }
             } receiveValue: { [weak self] (user: UserModel) in
                 print("✅ Usuário carregado: \(user.name)")
@@ -89,7 +88,7 @@ class AuthViewModel: ObservableObject {
                 print("✅ Login bem sucedido: \(user.email)")
                 self?.currentUser = user
                 self?.isAuthenticated = true
-                self?.fetchUserData(userId: user.id)
+                self?.isLoading = false
                 NotificationCenter.default.post(name: .didLogin, object: nil)
             }
             .store(in: &cancellables)
@@ -133,6 +132,17 @@ class AuthViewModel: ObservableObject {
         isAuthenticated = false
         isLoading = false
         errorMessage = nil
+    }
+    
+    public func refreshCurrentUser() {
+        guard let uid = FirebaseManager.shared.currentUser?.uid else {
+            self.clearState()
+            return
+        }
+        self.isAuthenticated = true
+        self.isLoading = true
+        self.fetchUserData(userId: uid)
+        self.isLoading = false
     }
     
     deinit {

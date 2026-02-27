@@ -22,6 +22,19 @@ struct BuyerProfileView: View {
     
     var body: some View {
         ScrollView {
+            if viewModel.isLoading && viewModel.buyer == nil {
+                VStack(spacing: 16) {
+                    ProgressView("Carregando perfil buyerprofileview...")
+                    Button("Recarregar") {
+                        if let userId = FirebaseManager.shared.currentUser?.uid {
+                            viewModel.loadBuyerProfile(userId: userId)
+                        }
+                    }
+                    .font(.footnote)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 40)
+            } else {
             VStack(spacing: 25) {
                 // Header com Foto
                 VStack(spacing: 15) {
@@ -58,11 +71,11 @@ struct BuyerProfileView: View {
                     }
                     
                     VStack(spacing: 5) {//MARK: TODO nao esta pegando o nome nem email viewmodel vazia
-                        Text(viewModel.buyer?.userName ?? "Cliente")
+                        Text(viewModel.buyer?.userName ?? authViewModel.currentUser?.name ?? "Cliente")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text(viewModel.buyer?.userEmail ?? "email@exemplo.com")
+                        Text(viewModel.buyer?.userEmail ?? authViewModel.currentUser?.email ?? "email@exemplo.com")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
@@ -223,6 +236,7 @@ struct BuyerProfileView: View {
                 .padding(.bottom, 30)
             }
         }
+    }
         .onChange(of: authViewModel.isAuthenticated) { isAuthenticated in
             if !isAuthenticated {
                 presentationMode.wrappedValue.dismiss()
@@ -247,20 +261,15 @@ struct BuyerProfileView: View {
             Button("Cancelar", role: .cancel) { }
             Button("Sair", role: .destructive) {
                 authViewModel.signOut()
-               showHomeAfterLogout = true
+                showHomeAfterLogout = true
             }
         } message: {
             Text("Tem certeza que deseja sair da sua conta?")
         }
         .onAppear {
-            guard let userId = FirebaseManager.shared.currentUser?.uid else { return }
+            let userId = FirebaseManager.shared.currentUser?.uid ?? authViewModel.currentUser?.id
+            guard let userId = userId else { return }
             viewModel.loadBuyerProfile(userId: userId)
-        }
-        .onChange(of: authViewModel.isAuthenticated) {
-            isAuthenticated in
-            if !isAuthenticated {
-                presentationMode.wrappedValue.dismiss()
-            }
         }
     }
     
