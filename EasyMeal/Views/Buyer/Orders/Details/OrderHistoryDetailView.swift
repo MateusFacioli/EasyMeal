@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct OrderHistoryDetailView: View {
-    let order: Order
+    let order: OrderModel
     @Environment(\.presentationMode) var presentationMode
     @State private var showRateSeller = false
     
@@ -127,17 +127,6 @@ struct OrderHistoryDetailView: View {
             .sheet(isPresented: $showRateSeller) {
                 RateOrderView(order: order)
             }
-        }
-    }
-    
-    private func statusColor(for status: OrderStatus) -> Color {
-        switch status {
-        case .pending: return .orange
-        case .confirmed: return .blue
-        case .preparing: return .purple
-        case .ready: return .green
-        case .delivered: return .gray
-        case .cancelled: return .red
         }
     }
 }

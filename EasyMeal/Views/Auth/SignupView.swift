@@ -205,7 +205,7 @@ struct SignupView: View {
                 Spacer()
             }
         }
-        //MARK: TODO ROTA AQUI CHAMAR maintabview? é rota de entrada fica no loading infinito
+        //TODO: ROTA AQUI CHAMAR maintabview? é rota de entrada fica no loading infinito
         .navigationBarHidden(true)
         .background(
             NavigationLink(

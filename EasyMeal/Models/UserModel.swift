@@ -20,14 +20,9 @@ struct UserModel: Identifiable, Codable {
     var createdAt: Date = Date()
     var fcmToken: String?
     
-    // Propriedades computadas para facilitar
-    var isSeller: Bool {
-        return userType == .seller
-    }
-    
-    var isBuyer: Bool {
-        return userType == .buyer
-    }
+    // Propriedades computadas
+    var isSeller: Bool { return userType == .seller }
+    var isBuyer: Bool { return userType == .buyer }
     
     var formattedDocument: String {
         if userType == .seller {
@@ -46,8 +41,9 @@ struct UserModel: Identifiable, Codable {
         }
         return phone
     }
+    
     enum CodingKeys: String, CodingKey {
-            case id, email, name, cpf_cnpj, phone, address, userType
-            case isPhoneVerified, profileImageURL, createdAt, fcmToken
+        case id, email, name, cpf_cnpj, phone, address, userType
+        case isPhoneVerified, profileImageURL, createdAt, fcmToken
     }
 }

@@ -11,15 +11,15 @@ import Foundation
 struct Buyer: Identifiable, Codable {
     var id: String
     var userId: String
-    var userEmail: String//
-    var userName: String//
-    var userPhone: String//
-    var favoriteSellerIds: [String]
+    var favoriteSellerIds: [String]?
     var searchRadius: Double // in meters
     var notificationPreferences: NotificationPreferences
-    var address: String?
     var profileImageURL: String?
-    var createdAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id, userId, favoriteSellerIds, searchRadius
+        case notificationPreferences, profileImageURL
+    }
 }
 
 struct NotificationPreferences: Codable {

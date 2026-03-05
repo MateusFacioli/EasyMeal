@@ -34,10 +34,15 @@ class FavoritesViewModel: ObservableObject {
                         .eraseToAnyPublisher()
                 }
                 
-                // Buscar cada seller favorito
-                let publishers = buyer.favoriteSellerIds.map { sellerId in
+                guard let favoriteIds = buyer.favoriteSellerIds, !favoriteIds.isEmpty else {
+                    // Se não tiver favoritos, retorna array vazio
+                    return Just([]).setFailureType(to: Error.self).eraseToAnyPublisher()
+                }
+                
+                // Buscar cada seller favorito usando favoriteIds (não é opcional)
+                let publishers = favoriteIds.map { sellerId in
                     self.databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(sellerId)")
-                        .catch { _ in
+                        .catch { _ -> AnyPublisher<Seller, Error> in
                             // Se algum seller não existir mais, retornar um publisher vazio
                             return Empty<Seller, Error>().eraseToAnyPublisher()
                         }
@@ -52,6 +57,7 @@ class FavoritesViewModel: ObservableObject {
                 self?.isLoading = false
                 if case .failure(let error) = completion {
                     print("Error loading favorite sellers: \(error)")
+                    self?.favoriteSellers = []
                 }
             } receiveValue: { [weak self] sellers in
                 self?.favoriteSellers = sellers
@@ -92,7 +98,12 @@ class FavoritesViewModel: ObservableObject {
         databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
             .flatMap { [weak self] (buyer: Buyer) -> AnyPublisher<Void, Error> in
                 var updatedBuyer = buyer
-                updatedBuyer.favoriteSellerIds.removeAll { $0 == sellerId }
+                
+                if updatedBuyer.favoriteSellerIds != nil {
+                    updatedBuyer.favoriteSellerIds?.removeAll { $0 == sellerId }
+                } else {
+                    updatedBuyer.favoriteSellerIds = []
+                }
                 
                 // Salvar buyer atualizado
                 return self?.databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)") ?? Empty().eraseToAnyPublisher()

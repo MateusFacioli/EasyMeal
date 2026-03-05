@@ -10,6 +10,8 @@ import SwiftUI
 
 struct AboutTab: View {
     let seller: Seller
+    let userEmail: String
+    let userPhone: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -42,14 +44,7 @@ struct AboutTab: View {
                         .foregroundColor(.red)
                 }
                 
-                if let address = seller.address, !address.isEmpty {
-                    Text(address)
-                        .font(.body)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
-                } else if let location = seller.currentLocation, let address = location.address {
+                if let location = seller.currentLocation, let address = location.address, !address.isEmpty {
                     Text(address)
                         .font(.body)
                         .padding()
@@ -83,7 +78,7 @@ struct AboutTab: View {
                         .foregroundColor(.gray)
                         .frame(width: 20)
                     
-                    Text(seller.userEmail)
+                    Text(userEmail)
                         .font(.body)
                     
                     Spacer()
@@ -105,7 +100,7 @@ struct AboutTab: View {
                         .foregroundColor(.gray)
                         .frame(width: 20)
                     
-                    Text(seller.userPhone.formattedPhoneNumber)
+                    Text(userPhone.formattedPhoneNumber)
                         .font(.body)
                     
                     Spacer()
@@ -219,14 +214,13 @@ struct AboutTab: View {
     }
     
     private func sendEmail() {
-        let email = seller.userEmail
-        if let url = URL(string: "mailto:\(email)") {
+        if let url = URL(string: "mailto:\(userEmail)") {
             UIApplication.shared.open(url)
         }
     }
     
     private func makePhoneCall() {
-        let phone = seller.userPhone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        let phone = userPhone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         if let url = URL(string: "tel://\(phone)"), UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         }
@@ -239,28 +233,34 @@ struct AboutTab_Previews: PreviewProvider {
         let mockSeller = Seller(
             id: "1",
             userId: "1",
-            userEmail: "lanches@ze.com",
-            userName: "Zé",
-            userPhone: "11999999999",
             businessName: "Lanches do Zé",
             description: "Os melhores lanches da região, feitos com ingredientes frescos e muito amor. Há mais de 10 anos servindo qualidade.",
             isOnline: true,
             currentLocation: Location(latitude: -23.5505, longitude: -46.6333, address: "Rua Exemplo, 123 - Centro, São Paulo - SP"),
             schedules: [
-                Schedule(id: "1", dayOfWeek: 2, startTime: Date(), endTime: Date(), location: Location(latitude: 0, longitude: 0), isActive: true)
+                Schedule(
+                    id: "1",
+                    dayOfWeek: 2,
+                    startTime: Date(),
+                    endTime: Date().addingTimeInterval(28800),
+                    location: Location(latitude: 0, longitude: 0),
+                    isActive: true
+                )
             ],
             menuId: nil,
             rating: 4.5,
             totalReviews: 42,
             isAvailableNow: true,
-            address: "Rua Exemplo, 123 - Centro, São Paulo - SP",
-            profileImageURL: nil,
-            createdAt: Date()
+            profileImageURL: nil
         )
         
         ScrollView {
-            AboutTab(seller: mockSeller)
-                .padding()
+            AboutTab(
+                seller: mockSeller,
+                userEmail: "lanches@ze.com",
+                userPhone: "11999999999"
+            )
+            .padding()
         }
         .previewLayout(.sizeThatFits)
     }

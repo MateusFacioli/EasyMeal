@@ -215,34 +215,3 @@ struct ScheduleTab: View {
         }
     }
 }
-
-// MARK: - Preview
-//struct ScheduleTab_Previews: PreviewProvider {
-//    static var previews: some View {
-//        let mockSeller = Seller(
-//            id: "1",
-//            userId: "1",
-//            userEmail: "lanches@ze.com",
-//            userName: "Zé",
-//            userPhone: "11999999999",
-//            businessName: "Lanches do Zé",
-//            description: "Lanches",
-//            isOnline: true,
-//            currentLocation: Location(latitude: -23.5505, longitude: -46.6333),
-//            schedules: [
-//                Schedule(id: "1", dayOfWeek: 2, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true),
-//                Schedule(id: "2", dayOfWeek: 3, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true),
-//                Schedule(id: "3", dayOfWeek: 4, startTime: Date(), endTime: Date().addingTimeInterval(3600 * 8), location: Location(latitude: 0, longitude: 0, address: "Rua Exemplo, 123"), isActive: true)
-//            ],
-//            menuId: nil,
-//            rating: 4.5,
-//            totalReviews: 42,
-//            isAvailableNow: true,
-//            address: nil,
-//            profileImageURL: nil,
-//            createdAt: Date()
-//        )
-//        
-//        ScheduleTab(seller: mockSeller)
-//    }
-//}

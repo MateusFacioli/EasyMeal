@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct OrderCard: View {
-    let order: Order
+    let order: OrderModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -82,17 +82,6 @@ struct OrderCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5)
-    }
-    
-    private func statusColor(for status: OrderStatus) -> Color {
-        switch status {
-        case .pending: return .orange
-        case .confirmed: return .blue
-        case .preparing: return .purple
-        case .ready: return .green
-        case .delivered: return .gray
-        case .cancelled: return .red
-        }
     }
     
     private func paymentIcon(for method: String) -> String {

@@ -23,7 +23,6 @@ class WriteReviewViewModel: ObservableObject {
         self.storageService = storageService
     }
     
-    //MARK: TODO VERIFY PATH
     func submitReview(sellerId: String, rating: Int, comment: String, images: [UIImage], completion: @escaping () -> Void) {
         guard let userId = FirebaseManager.shared.currentUser?.uid,
               let userName = FirebaseManager.shared.currentUser?.displayName else {

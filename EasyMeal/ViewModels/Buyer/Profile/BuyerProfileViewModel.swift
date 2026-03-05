@@ -17,7 +17,7 @@ class BuyerProfileViewModel: ObservableObject {
     @Published var searchRadius: Double = 1000
     @Published var notificationsEnabled = true
     @Published var preferredPayment: String? = "PIX"
-    @Published var recentOrders: [Order] = []
+    @Published var recentOrders: [OrderModel] = []
     @Published var isLoading = false
     
     private let databaseService: DatabaseServiceProtocol
@@ -60,7 +60,7 @@ class BuyerProfileViewModel: ObservableObject {
         // TODO: Carregar pedidos reais do Firebase
         // Por enquanto, dados mockados
         self.recentOrders = [
-            Order(
+            OrderModel(
                 id: "ORD001",
                 sellerId: "SELLER001",
                 sellerName: "Lanches do Zé",
@@ -75,7 +75,7 @@ class BuyerProfileViewModel: ObservableObject {
                 createdAt: Date().addingTimeInterval(-86400),
                 estimatedDeliveryTime: 45
             ),
-            Order(
+            OrderModel(
                 id: "ORD002",
                 sellerId: "SELLER002",
                 sellerName: "Doces da Maria",

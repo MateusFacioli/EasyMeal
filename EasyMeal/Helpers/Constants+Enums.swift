@@ -10,14 +10,19 @@ import Foundation
 
 struct Constants {
     struct FirebasePaths {
+        // Database paths
         static let users = "users"
         static let sellers = "sellers"
         static let buyers = "buyers"
         static let menus = "menus"
         static let schedules = "schedules"
         static let orders = "orders"
-        static let menuItems = "menu_items"
         static let reviews = "reviews"
+        // Storage paths
+        static let menuItems = "menu_items"
+        static let reviewsImages = "reviews_mages"
+        static let profileImages = "profiles"
+        
     }
     
     struct UserDefaultsKeys {

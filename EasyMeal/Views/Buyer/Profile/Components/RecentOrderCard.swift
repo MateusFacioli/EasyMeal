@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RecentOrderCard: View {
-    let order: Order
+    let order: OrderModel
     
     var body: some View {
         HStack {
@@ -41,16 +41,5 @@ struct RecentOrderCard: View {
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(10)
-    }
-    
-    private func statusColor(for status: OrderStatus) -> Color {
-        switch status {
-        case .pending: return .orange
-        case .confirmed: return .blue
-        case .preparing: return .purple
-        case .ready: return .green
-        case .delivered: return .gray
-        case .cancelled: return .red
-        }
     }
 }

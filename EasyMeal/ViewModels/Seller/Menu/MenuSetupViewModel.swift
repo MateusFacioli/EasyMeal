@@ -85,7 +85,6 @@ class MenuSetupViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    //MARK: TODO VERIFY PATH
     private func loadMenuItems(menuId: String) {
         databaseService.fetch(path: "\(Constants.FirebasePaths.menus)/\(menuId)")
             .receive(on: RunLoop.main)
@@ -93,7 +92,7 @@ class MenuSetupViewModel: ObservableObject {
                 if case .failure(let error) = completion {
                     print("Error loading menu: \(error)")
                 }
-            } receiveValue: { [weak self] (menu: MenuModel) in // CORRIGIDO: Mudado para MenuModel
+            } receiveValue: { [weak self] (menu: MenuModel) in
                 self?.menuItems = menu.items
                 self?.categories = Array(Set(menu.categories + (self?.categories ?? [])))
             }
@@ -144,7 +143,7 @@ class MenuSetupViewModel: ObservableObject {
             self.saveMenuToDatabase(imageURLs: imageURLs)
         }
     }
-    //MARK: TODO VERIFY PATH
+    
     private func uploadImages(completion: @escaping ([String]) -> Void) {
         var uploadedURLs: [String] = []
         let group = DispatchGroup()
@@ -183,7 +182,7 @@ class MenuSetupViewModel: ObservableObject {
         }
         
         // Criar ou atualizar menu
-        let menu = MenuModel( // CORRIGIDO: Mudado para MenuModel
+        let menu = MenuModel(
             id: UUID().uuidString,
             sellerId: userId,
             items: updatedItems,
@@ -191,7 +190,7 @@ class MenuSetupViewModel: ObservableObject {
             isActive: true,
             lastUpdated: Date()
         )
-        //MARK: TODO VERIFY PATH
+        
         // Salvar menu
         databaseService.save(menu, path: "\(Constants.FirebasePaths.menus)/\(menu.id)")
             .flatMap { _ in

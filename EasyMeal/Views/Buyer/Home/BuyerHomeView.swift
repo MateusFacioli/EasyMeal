@@ -126,7 +126,6 @@ struct BuyerHomeView: View {
     private var mapView: some View {
         if let _ = viewModel.buyerLocation {
             Map(coordinateRegion: $region, annotationItems: mapAnnotations) { item in
-                // CORRIGIDO: Usar MapMarker para simplificar
                 if item.isBuyer {
                     MapMarker(coordinate: item.coordinate, tint: .blue)
                 } else {
@@ -278,6 +277,7 @@ struct BuyerHomeView: View {
     }
 }
 
+//TODO: VERIFY
 // MARK: - Annotation Wrapper
 struct SellerAnnotation: Identifiable, Equatable {
     let id: String

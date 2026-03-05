@@ -23,7 +23,6 @@ class MenuTabViewModel: ObservableObject {
     
     func loadMenu(sellerId: String) {
         isLoading = true
-        //MARK: TODO VERIFY PATH
         // Primeiro, buscar o seller para pegar o menuId
         databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(sellerId)")
             .flatMap { (seller: Seller) -> AnyPublisher<MenuModel, Error> in

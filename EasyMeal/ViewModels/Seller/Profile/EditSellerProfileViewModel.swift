@@ -50,8 +50,8 @@ class EditSellerProfileViewModel: ObservableObject {
             } receiveValue: { [weak self] (seller: Seller) in
                 self?.businessName = seller.businessName
                 self?.description = seller.description
-                self?.phone = seller.userPhone
-                self?.address = seller.address ?? ""
+//                self?.phone = seller.userPhone
+//                self?.address = seller.address ?? ""
                 
                 // Carregar imagem de perfil se existir
                 if let imageUrl = seller.profileImageURL {
@@ -128,7 +128,7 @@ class EditSellerProfileViewModel: ObservableObject {
                 } else {
                     self?.successMessage = "Perfil atualizado com sucesso!"
                     // Aguardar um pouco antes de completar
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                         completion()
                     }
                 }

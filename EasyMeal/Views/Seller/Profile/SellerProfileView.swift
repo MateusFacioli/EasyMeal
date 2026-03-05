@@ -62,7 +62,7 @@ struct SellerProfileView: View {
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text(viewModel.seller?.userEmail ?? authViewModel.currentUser?.email ?? "email@exemplo.com")
+                        Text(authViewModel.currentUser?.email ?? "email@exemplo.com")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }

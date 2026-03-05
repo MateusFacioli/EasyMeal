@@ -9,7 +9,7 @@ import Combine
 import FirebaseAuth
 
 class OrdersViewModel: ObservableObject {
-    @Published var orders: [Order] = []
+    @Published var orders: [OrderModel] = []
     @Published var isLoading = false
     
     private let databaseService: DatabaseServiceProtocol
@@ -25,11 +25,12 @@ class OrdersViewModel: ObservableObject {
         isLoading = true
         
         // Por enquanto, dados mockados
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.orders = [
-                Order(
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.orders = [
+                OrderModel(
                     id: "ORD001",
                     sellerId: userId,
+                    sellerName: "comer1",
                     customerId: "CUST001",
                     customerName: "João Silva",
                     customerPhone: "11999999999",
@@ -53,9 +54,10 @@ class OrdersViewModel: ObservableObject {
                     notes: "Sem cebola",
                     createdAt: Date()
                 ),
-                Order(
+                OrderModel(
                     id: "ORD002",
                     sellerId: userId,
+                    sellerName: "comer2",
                     customerId: "CUST002",
                     customerName: "Maria Santos",
                     customerPhone: "11988888888",
@@ -73,9 +75,10 @@ class OrdersViewModel: ObservableObject {
                     notes: nil,
                     createdAt: Date().addingTimeInterval(-3600)
                 ),
-                Order(
+                OrderModel(
                     id: "ORD003",
                     sellerId: userId,
+                    sellerName: "comer3",
                     customerId: "CUST003",
                     customerName: "Pedro Oliveira",
                     customerPhone: "11977777777",
@@ -100,7 +103,7 @@ class OrdersViewModel: ObservableObject {
                     createdAt: Date().addingTimeInterval(-7200)
                 )
             ]
-            self.isLoading = false
+            self?.isLoading = false
         }
         
         // TODO: Implementar carregamento real do Firebase
@@ -118,7 +121,7 @@ class OrdersViewModel: ObservableObject {
             "status": status.rawValue,
             "updatedAt": Date().timeIntervalSince1970
         ]
-        //MARK: TODO VERIFY PATH
+        
         databaseService.update(path: "\(Constants.FirebasePaths.orders)/\(orderId)", data: data)
             .receive(on: RunLoop.main)
             .sink { completion in

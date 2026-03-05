@@ -136,7 +136,7 @@ class AuthService: AuthServiceProtocol {
         .eraseToAnyPublisher()
     }
 
-    // MARK: - Save User to Database (com caminho específico)
+    // MARK: - Save User to Database
     private func saveUserToDatabase(user: UserModel, path: String) -> AnyPublisher<Void, Error> {
         var userData: [String: Any] = [
             "id": user.id,
@@ -162,9 +162,8 @@ class AuthService: AuthServiceProtocol {
             userData["fcmToken"] = fcmToken
         }
         
-        // Se for seller, adicionar businessName
         if user.userType == .seller {
-            userData["businessName"] = user.name // ou outro campo específico
+            userData["businessName"] = user.name
         }
         
         return databaseService.update(path: path, data: userData)
@@ -172,7 +171,6 @@ class AuthService: AuthServiceProtocol {
     
     // MARK: - Fetch User from Database
     private func fetchUserFromDatabase(userId: String) -> AnyPublisher<UserModel, Error> {
-        // Tentar buscar em users/sellers/ primeiro, depois em users/buyers/
         let sellerPath = "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)"
         let buyerPath = "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)"
         
@@ -207,8 +205,7 @@ class AuthService: AuthServiceProtocol {
         .eraseToAnyPublisher()
     }
     
-    // MARK: - Delete Account
-    //MARK: AINDA NÃO REMOVE
+    // MARK: - Delete Account - auth not yet
     func deleteAccount() -> AnyPublisher<Void, Error> {
         Future<Void, Error> { [weak self] promise in
             guard let self = self, let user = self.firebaseManager.auth.currentUser else {
@@ -217,32 +214,53 @@ class AuthService: AuthServiceProtocol {
             }
             
             let userId = user.uid
-            
+            print("🗑️ Iniciando exclusão da conta: \(userId)")
             self.fetchUserFromDatabase(userId: userId)
                 .flatMap { user -> AnyPublisher<Void, Error> in
+                    print("✅ Usuário encontrado no DB, deletando dados...")
                     // Criar array de publishers para deletar tudo
                     var deleteOperations: [AnyPublisher<Void, Error>] = []
                     
-                    // Adicionar operações específicas do tipo
-                    deleteOperations.append(contentsOf: self.getDeleteOperations(for: user, userId: userId))
+                    // 1. Deletar dados específicos do tipo
+                    if user.userType == .seller {
+                        deleteOperations.append(contentsOf: self.deleteSellerData(userId: userId))
+                    } else {
+                        deleteOperations.append(self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")
+                        )
+                    }
                     
-                    // Deletar usuário base
-                    let userTypePath = user.userType == .seller ? "sellers" : "buyers"
+                    // 2. Deletar pedidos (se existirem)
                     deleteOperations.append(
-                        self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(userTypePath)/\(userId)")
+                        self.safeDelete(path: "\(Constants.FirebasePaths.orders)/\(userId)")
                     )
                     
+                    // 3. Deletar avaliações feitas pelo usuário
+                    deleteOperations.append(self.deleteUserReviews(userId: userId))
+                    // Executar todas as deleções do DB em paralelo
                     return Publishers.MergeMany(deleteOperations)
                         .collect()
-                        .map { _ in () }
+                        .map { _ in
+                            print("✅ Todos os dados do DB foram deletados")
+                            return ()
+                        }
                         .eraseToAnyPublisher()
                 }
+                // remove auth
+                .catch { error -> AnyPublisher<Void, Error> in
+                    print("⚠️ Erro ao deletar dados do DB: \(error)")
+                    print("➡️ Continuando para deletar do Authentication mesmo assim...")
+                    return Just(()).setFailureType(to: Error.self).eraseToAnyPublisher()
+                }
                 .flatMap { _ -> AnyPublisher<Void, Error> in
-                    Future<Void, Error> { promise in
+                    print("🗑️ Deletando usuário do Authentication...")
+                    // Deletar do Firebase Authentication
+                    return Future<Void, Error> { promise in
                         user.delete { error in
                             if let error = error {
+                                print("❌ Erro ao deletar do Authentication: \(error)")
                                 promise(.failure(error))
                             } else {
+                                print("✅ Usuário deletado do Authentication com sucesso!")
                                 promise(.success(()))
                             }
                         }
@@ -250,9 +268,12 @@ class AuthService: AuthServiceProtocol {
                     .eraseToAnyPublisher()
                 }
                 .sink(receiveCompletion: { completion in
-                    if case .failure(let error) = completion {
+                    switch completion {
+                    case .failure(let error):
+                        print("❌ Falha na exclusão da conta: \(error)")
                         promise(.failure(error))
-                    } else {
+                    case .finished:
+                        print("✅ Conta excluída completamente com sucesso!")
                         promise(.success(()))
                     }
                 }, receiveValue: { _ in })
@@ -272,7 +293,7 @@ class AuthService: AuthServiceProtocol {
             }
         }
     }
-    
+    //MARK: VERIFY seller and buyer
     func verifyPhoneCode(code: String, phoneNumber: String, completion: @escaping (Result<UserModel, Error>) -> Void) {
         guard let verificationID = UserDefaults.standard.string(forKey: "authVerificationID") else {
             completion(.failure(NSError(domain: "AuthService", code: -1, userInfo: [NSLocalizedDescriptionKey: "ID de verificação não encontrado"])))
@@ -342,7 +363,7 @@ private extension AuthService {
         var operations: [AnyPublisher<Void, Error>] = []
         
         // Deletar pedidos
-        operations.append(safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.orders)/\(userId)"))
+        operations.append(safeDelete(path: "\(Constants.FirebasePaths.orders)/\(userId)"))
         
         if user.userType == .seller {
             // Deletar seller e cardápio
@@ -361,15 +382,15 @@ private extension AuthService {
     func deleteSellerData(userId: String) -> [AnyPublisher<Void, Error>] {
         var operations: [AnyPublisher<Void, Error>] = []
         
-        let sellerPublisher = databaseService.fetch(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
+        let sellerPublisher = databaseService.fetch(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
             .flatMap { (seller: Seller) -> AnyPublisher<Void, Error> in
                 var sellerOps: [AnyPublisher<Void, Error>] = []
                 
                 if let menuId = seller.menuId {
-                    sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.menus)/\(menuId)"))
+                    sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.menus)/\(menuId)"))
                 }
                 
-                sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)"))
+                sellerOps.append(self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)"))
                 
                 return Publishers.MergeMany(sellerOps)
                     .collect()
@@ -377,14 +398,14 @@ private extension AuthService {
                     .eraseToAnyPublisher()
             }
             .catch { _ -> AnyPublisher<Void, Error> in
-                self.safeDelete(path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.sellers)/\(userId)")
+                self.safeDelete(path: "\(Constants.FirebasePaths.sellers)/\(userId)")
             }
             .eraseToAnyPublisher()
         
         operations.append(sellerPublisher)
         return operations
     }
-    //MARK: TODO VERIFY PATH
+    
     func deleteUserReviews(userId: String) -> AnyPublisher<Void, Error> {
         return databaseService.fetchAll(path: Constants.FirebasePaths.reviews)
             .flatMap { (reviews: [Review]) -> AnyPublisher<Void, Error> in
@@ -394,7 +415,6 @@ private extension AuthService {
                 let userReviews = reviews.filter { $0.userId == userId }
                 
                 for review in userReviews {
-                    // O caminho precisa ser reviews/sellerId/reviewId
                     let path = "\(Constants.FirebasePaths.reviews)/\(review.sellerId)/\(review.id)"
                     reviewDeletes.append(self.safeDelete(path: path))
                 }
@@ -413,5 +433,5 @@ private extension AuthService {
             }
             .eraseToAnyPublisher()
     }
-    }
+}
 

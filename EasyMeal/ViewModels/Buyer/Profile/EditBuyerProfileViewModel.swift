@@ -41,9 +41,9 @@ class EditBuyerProfileViewModel: ObservableObject {
                     print("Error loading buyer profile for edit: \(error)")
                 }
             } receiveValue: { [weak self] (buyer: Buyer) in
-                self?.fullName = buyer.userName
-                self?.phone = buyer.userPhone
-                self?.address = buyer.address ?? ""
+//                self?.fullName = buyer.userId
+//                self?.phone = buyer.userPhone
+//                self?.address = buyer.address ?? ""
                 self?.searchRadius = buyer.searchRadius
                 self?.newSellersNotification = buyer.notificationPreferences.newOffersNearby
                 self?.offersNotification = buyer.notificationPreferences.promotions
@@ -65,15 +65,10 @@ class EditBuyerProfileViewModel: ObservableObject {
         let updatedBuyer = Buyer(
             id: userId,
             userId: userId,
-            userEmail: "", // Manter email original
-            userName: fullName,
-            userPhone: phone,
             favoriteSellerIds: [], // Manter favoritos existentes
             searchRadius: searchRadius,
             notificationPreferences: notificationPreferences,
-            address: address.isEmpty ? nil : address,
-            profileImageURL: nil, // Manter imagem existente
-            createdAt: Date() // Manter data original
+            profileImageURL: "", // Manter imagem existente
         )
         
         databaseService.save(updatedBuyer, path: "\(Constants.FirebasePaths.users)/\(Constants.FirebasePaths.buyers)/\(userId)")

@@ -13,9 +13,9 @@ struct OrdersView: View {
     @StateObject private var viewModel = OrdersViewModel()
     @State private var selectedFilter: OrderFilter = .all
     @State private var showOrderDetail = false
-    @State private var selectedOrder: Order?
+    @State private var selectedOrder: OrderModel?
     
-    var filteredOrders: [Order] {
+    var filteredOrders: [OrderModel] {
         switch selectedFilter {
         case .all:
             return viewModel.orders
@@ -162,19 +162,19 @@ struct OrdersView: View {
         }
     }
     
-    private func confirmOrder(_ order: Order) {
+    private func confirmOrder(_ order: OrderModel) {
         viewModel.updateOrderStatus(order.id, to: .confirmed)
     }
     
-    private func cancelOrder(_ order: Order) {
+    private func cancelOrder(_ order: OrderModel) {
         viewModel.updateOrderStatus(order.id, to: .cancelled)
     }
     
-    private func startPreparing(_ order: Order) {
+    private func startPreparing(_ order: OrderModel) {
         viewModel.updateOrderStatus(order.id, to: .preparing)
     }
     
-    private func markAsReady(_ order: Order) {
+    private func markAsReady(_ order: OrderModel) {
         viewModel.updateOrderStatus(order.id, to: .ready)
     }
 }

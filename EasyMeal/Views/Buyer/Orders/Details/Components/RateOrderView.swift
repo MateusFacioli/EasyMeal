@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct RateOrderView: View {
-    let order: Order
+    let order: OrderModel
     @Environment(\.presentationMode) var presentationMode
     @State private var rating = 5
     @State private var comment = ""

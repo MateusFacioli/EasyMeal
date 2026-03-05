@@ -70,12 +70,12 @@ struct BuyerProfileView: View {
                         }
                     }
                     
-                    VStack(spacing: 5) {//MARK: TODO nao esta pegando o nome nem email viewmodel vazia
-                        Text(viewModel.buyer?.userName ?? authViewModel.currentUser?.name ?? "Cliente")
+                    VStack(spacing: 5) {
+                        Text(authViewModel.currentUser?.name ?? "Cliente")
                             .font(.title2)
                             .fontWeight(.bold)
                         
-                        Text(viewModel.buyer?.userEmail ?? authViewModel.currentUser?.email ?? "email@exemplo.com")
+                        Text(authViewModel.currentUser?.email ?? "email@exemplo.com")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }

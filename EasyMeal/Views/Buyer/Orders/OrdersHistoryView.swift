@@ -12,12 +12,12 @@ import Combine
 struct OrdersHistoryView: View {
     @StateObject private var viewModel = OrdersHistoryViewModel()
     @State private var selectedFilter: OrderHistoryFilter = .all
-    @State private var selectedOrder: Order? = nil
+    @State private var selectedOrder: OrderModel? = nil
     @State private var showOrderDetail = false
     @State private var showReorderConfirmation = false
-    @State private var orderToReorder: Order? = nil
+    @State private var orderToReorder: OrderModel? = nil
     
-    var filteredOrders: [Order] {
+    var filteredOrders: [OrderModel] {
         let orders = viewModel.orders
         
         switch selectedFilter {
@@ -124,12 +124,12 @@ struct OrdersHistoryView: View {
         }
     }
     
-    private func reorder(_ order: Order) {
+    private func reorder(_ order: OrderModel) {
         orderToReorder = order
         showReorderConfirmation = true
     }
     
-    private func confirmReorder(_ order: Order) {
+    private func confirmReorder(_ order: OrderModel) {
         // Implementar lógica para refazer pedido
         viewModel.reorder(order: order)
     }

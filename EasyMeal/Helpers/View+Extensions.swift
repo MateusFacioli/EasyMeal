@@ -12,6 +12,17 @@ extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
     }
+    
+    func statusColor(for status: OrderStatus) -> Color {
+        switch status {
+        case .pending: return .orange
+        case .confirmed: return .blue
+        case .preparing: return .purple
+        case .ready: return .green
+        case .delivered: return .gray
+        case .cancelled: return .red
+        }
+    }
 }
 
 struct RoundedCorner: Shape {

@@ -83,9 +83,6 @@ class BuyerHomeViewModel: ObservableObject {
             Seller(
                 id: "1",
                 userId: "1",
-                userEmail: "lanches@ze.com",
-                userName: "Zé",
-                userPhone: "11999999999",
                 businessName: "Lanches do Zé",
                 description: "Os melhores lanches da região",
                 isOnline: true,
@@ -96,16 +93,11 @@ class BuyerHomeViewModel: ObservableObject {
                 rating: 4.5,
                 totalReviews: 42,
                 isAvailableNow: true,
-                address: "Rua Exemplo, 123",
                 profileImageURL: nil,
-                createdAt: Date()
             ),
             Seller(
                 id: "2",
                 userId: "2",
-                userEmail: "doces@maria.com",
-                userName: "Maria",
-                userPhone: "11988888888",
                 businessName: "Doces da Maria",
                 description: "Doces caseiros e sobremesas",
                 isOnline: true,
@@ -116,16 +108,11 @@ class BuyerHomeViewModel: ObservableObject {
                 rating: 4.8,
                 totalReviews: 28,
                 isAvailableNow: true,
-                address: "Av. Principal, 456",
                 profileImageURL: nil,
-                createdAt: Date()
             ),
             Seller(
                 id: "3",
                 userId: "3",
-                userEmail: "sucos@joao.com",
-                userName: "João",
-                userPhone: "11977777777",
                 businessName: "Sucos Naturais João",
                 description: "Sucos frescos e saudáveis",
                 isOnline: false,
@@ -136,9 +123,7 @@ class BuyerHomeViewModel: ObservableObject {
                 rating: 4.2,
                 totalReviews: 15,
                 isAvailableNow: false,
-                address: "Praça Central, 789",
                 profileImageURL: nil,
-                createdAt: Date()
             )
         ]
         

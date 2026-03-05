@@ -12,9 +12,6 @@ import CoreLocation
 struct Seller: Identifiable, Codable {
     var id: String
     var userId: String
-    var userEmail: String
-    var userName: String
-    var userPhone: String
     var businessName: String
     var description: String
     var isOnline: Bool
@@ -25,9 +22,7 @@ struct Seller: Identifiable, Codable {
     var rating: Double
     var totalReviews: Int
     var isAvailableNow: Bool
-    var address: String?
     var profileImageURL: String?
-    var createdAt: Date
     
     var formattedRating: String {
         return String(format: "%.1f", rating)
@@ -39,6 +34,12 @@ struct Seller: Identifiable, Codable {
     
     var hasMenu: Bool {
         return menuId != nil
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, userId, businessName, description, isOnline
+        case distance, currentLocation, schedules, menuId
+        case rating, totalReviews, isAvailableNow, profileImageURL
     }
 }
 

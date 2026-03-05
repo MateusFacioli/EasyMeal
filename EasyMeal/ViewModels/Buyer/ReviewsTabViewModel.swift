@@ -42,8 +42,8 @@ class ReviewsTabViewModel: ObservableObject {
         
         // TODO: Implementar carregamento real do Firebase
         // Por enquanto, dados mockados
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            self.reviews = [
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.reviews = [
                 Review(
                     id: "1",
                     sellerId: sellerId,
@@ -84,7 +84,7 @@ class ReviewsTabViewModel: ObservableObject {
                     sellerReply: nil
                 )
             ]
-            self.isLoading = false
+            self?.isLoading = false
         }
         
         // TODO: Implementar carregamento real
